@@ -1,9 +1,14 @@
-"""Simple text-based idea deduplication."""
+"""Idea deduplication using rapidfuzz for better string similarity.
+
+Uses token-based similarity for more accurate matching of semantically
+similar ideas, even with different word order or phrasing.
+"""
 
 from __future__ import annotations
 
-from difflib import SequenceMatcher
 from typing import List, Tuple
+
+from rapidfuzz import fuzz
 
 from .logging_config import get_logger
 from .models import IdeaExtraction
@@ -12,7 +17,9 @@ logger = get_logger(__name__)
 
 
 def similarity_ratio(a: str, b: str) -> float:
-    """Calculate similarity ratio between two strings.
+    """Calculate similarity ratio between two strings using token-based matching.
+
+    Uses token_set_ratio which is more robust to word order and partial matches.
 
     Args:
         a: First string
@@ -21,14 +28,39 @@ def similarity_ratio(a: str, b: str) -> float:
     Returns:
         Similarity ratio between 0.0 and 1.0
     """
-    return SequenceMatcher(None, a.lower(), b.lower()).ratio()
+    # token_set_ratio handles word order differences and partial matches
+    # Score is 0-100, normalize to 0-1
+    return fuzz.token_set_ratio(a.lower(), b.lower()) / 100.0
+
+
+def combined_similarity(ext1: IdeaExtraction, ext2: IdeaExtraction) -> float:
+    """Calculate combined similarity across multiple fields.
+
+    Uses weighted average of:
+    - idea_summary (50%)
+    - pain_point (25%)
+    - target_user (25%)
+
+    Args:
+        ext1: First extraction
+        ext2: Second extraction
+
+    Returns:
+        Combined similarity score between 0.0 and 1.0
+    """
+    summary_sim = similarity_ratio(ext1.idea_summary, ext2.idea_summary)
+    pain_sim = similarity_ratio(ext1.pain_point, ext2.pain_point) if ext1.pain_point and ext2.pain_point else 0.0
+    user_sim = similarity_ratio(ext1.target_user, ext2.target_user) if ext1.target_user and ext2.target_user else 0.0
+
+    # Weighted average
+    return (summary_sim * 0.5) + (pain_sim * 0.25) + (user_sim * 0.25)
 
 
 def dedupe_ideas(
     ideas: List[Tuple[str, IdeaExtraction]],  # List of (post_id, extraction) tuples
-    similarity_threshold: float = 0.7,
+    similarity_threshold: float = 0.75,
 ) -> List[Tuple[str, IdeaExtraction, List[str]]]:
-    """Deduplicate ideas based on text similarity.
+    """Deduplicate ideas based on text similarity using rapidfuzz.
 
     Groups similar ideas together, keeping the first occurrence as canonical.
 
@@ -52,6 +84,12 @@ def dedupe_ideas(
         if post_id in assigned:
             continue
 
+        # Skip not_extractable ideas (no meaningful content to dedupe)
+        if extraction.idea_summary.lower().startswith("no viable"):
+            assigned.add(post_id)
+            clusters.append((post_id, extraction, []))
+            continue
+
         # This idea starts a new cluster
         duplicates: List[str] = []
 
@@ -61,10 +99,12 @@ def dedupe_ideas(
             if other_post_id in assigned:
                 continue
 
-            # Compare idea summaries
-            sim = similarity_ratio(
-                extraction.idea_summary, other_extraction.idea_summary
-            )
+            # Skip not_extractable ideas
+            if other_extraction.idea_summary.lower().startswith("no viable"):
+                continue
+
+            # Use combined similarity across multiple fields
+            sim = combined_similarity(extraction, other_extraction)
 
             if sim >= similarity_threshold:
                 duplicates.append(other_post_id)
