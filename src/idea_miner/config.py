@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import List, Union
 
-from pydantic import Field, field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -84,8 +84,8 @@ class Settings(BaseSettings):
     # OpenAI configuration
     openai_api_key: str = Field(
         default="",
-        alias="OPENAI_API_KEY",
-        description="OpenAI API key (uses OPENAI_API_KEY env var)",
+        validation_alias=AliasChoices("OPENAI_API_KEY", "IDEA_MINER_OPENAI_API_KEY"),
+        description="OpenAI API key (accepts OPENAI_API_KEY or IDEA_MINER_OPENAI_API_KEY)",
     )
     openai_model: str = Field(
         default="gpt-4o",

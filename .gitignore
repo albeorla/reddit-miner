@@ -49,3 +49,4 @@ htmlcov/
 
 # mypy
 .mypy_cache/
+.out/

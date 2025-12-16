@@ -117,6 +117,9 @@ CREATE INDEX IF NOT EXISTS idx_ideas_run_id ON ideas(run_id);
 CREATE INDEX IF NOT EXISTS idx_ideas_total_score ON ideas(total_score DESC);
 CREATE INDEX IF NOT EXISTS idx_ideas_disqualified ON ideas(disqualified);
 CREATE INDEX IF NOT EXISTS idx_ideas_extraction_state ON ideas(extraction_state);
+
+-- Prevent duplicate ideas for the same post in the same run
+CREATE UNIQUE INDEX IF NOT EXISTS idx_ideas_post_run_unique ON ideas(post_id, run_id);
 """
 
 
