@@ -13,6 +13,7 @@ from . import app, console
 from ..config import get_settings
 from ..logging_config import configure_logging, get_logger
 from ..pipeline import run_pipeline, run_process_only
+from ..progress import create_progress, set_progress
 
 
 @app.command()
@@ -49,6 +50,11 @@ def run(
         False,
         "--log-json",
         help="Output logs as JSON.",
+    ),
+    no_progress: bool = typer.Option(
+        False,
+        "--no-progress",
+        help="Disable progress bars (useful for logging).",
     ),
 ):
     """Run the full idea mining pipeline.
@@ -96,7 +102,16 @@ def run(
             return await run_pipeline(settings, llm, fetch_new=True, process_limit=process_limit)
 
     try:
-        result = asyncio.run(_run())
+        # Use progress bars unless disabled or logging JSON
+        if no_progress or log_json:
+            result = asyncio.run(_run())
+        else:
+            # Run with progress display
+            progress = create_progress()
+            with progress:
+                set_progress(progress)
+                result = asyncio.run(_run())
+                set_progress(None)
     except KeyboardInterrupt:
         console.print("\n[yellow]Interrupted[/yellow]")
         raise typer.Exit(130)

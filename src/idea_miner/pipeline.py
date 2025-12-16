@@ -12,6 +12,7 @@ from .analyze import LLMAnalysisError, analyze_post
 from .config import Settings
 from .logging_config import get_logger
 from .models import FullAnalysis
+from .progress import advance_analyze, advance_fetch, complete_analyze, complete_fetch, start_analyze_task, start_fetch_task
 from .reddit_async import RedditPost, fetch_all_subreddits
 from .store import AsyncStore
 
@@ -54,12 +55,15 @@ async def process_post(
         try:
             analysis = await analyze_post(llm, post)
             await store.save_idea(post, analysis.extraction, analysis.score, run_id=run_id)
+            advance_analyze()
             return (post.id, analysis, None)
         except LLMAnalysisError as e:
             logger.warning("post_analysis_failed", post_id=post.id, error=str(e))
+            advance_analyze()
             return (post.id, None, str(e))
         except Exception as e:
             logger.error("post_processing_failed", post_id=post.id, error=str(e))
+            advance_analyze()
             return (post.id, None, str(e))
 
 
@@ -102,6 +106,10 @@ async def run_pipeline(
 
         # Fetch new posts if requested
         if fetch_new:
+            # Start fetch progress (estimated based on subreddits * limit)
+            estimated_posts = len(settings.subreddits) * settings.posts_per_subreddit
+            start_fetch_task(estimated_posts)
+            
             posts = await fetch_all_subreddits(
                 subreddits=settings.subreddits,
                 listing=settings.listing,
@@ -110,6 +118,7 @@ async def run_pipeline(
                 max_concurrency=settings.max_concurrency,
                 user_agent=settings.user_agent,
             )
+            complete_fetch()
             await store.upsert_posts(posts)
         else:
             # Load unprocessed posts from database
@@ -121,10 +130,16 @@ async def run_pipeline(
         if process_limit and len(posts) > process_limit:
             posts = posts[:process_limit]
 
+        # Start analyze progress
+        if posts:
+            start_analyze_task(len(posts))
+
         # Process posts concurrently
         sem = asyncio.Semaphore(settings.max_concurrency)
         tasks = [process_post(llm, store, post, sem, run_id) for post in posts]
         results = await asyncio.gather(*tasks)
+        
+        complete_analyze()
 
         # Count results by extraction state
         from .models import ExtractionState
