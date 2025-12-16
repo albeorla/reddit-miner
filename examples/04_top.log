@@ -1,0 +1,19 @@
+2025-12-16 13:14:47 [info     ] database_connected             path=idea_miner.sqlite3
+2025-12-16 13:14:47 [info     ] database_closed
+                                             Top 10 Ideas                                             
+┏━━━━┳━━━━━━━┳━━━━┳━━━━━┳━━━━┳━━━━━┳━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃    ┃ Score ┃    ┃ $   ┃    ┃ C   ┃    ┃ Idea                                          ┃ Subreddit  ┃
+┡━━━━╇━━━━━━━╇━━━━╇━━━━━╇━━━━╇━━━━━╇━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│    │ 25    │    │ 3   │    │ 6   │    │ A privacy-first “WhatsApp Wrapped” analyti... │ SideProjec │
+│    │ 21    │    │ 5   │    │ 3   │    │ An event-driven onboarding tool that split... │ IndieHacke │
+│    │ 20    │    │ 3   │    │ 3   │    │ A configurable moderator bot that enforces... │ IndieHacke │
+│    │ 0     │    │ 0   │    │ 0   │    │ No viable idea                                │ SideProjec │
+│    │ 0     │    │ 0   │    │ 0   │    │ No viable product idea described (TraceKit... │ IndieHacke │
+│    │ 0     │    │ 0   │    │ 0   │    │ No viable idea                                │ SideProjec │
+│    │ 0     │    │ 0   │    │ 0   │    │ No viable idea (self-promotional/validatio... │ SideProjec │
+│    │ 0     │    │ 0   │    │ 0   │    │ No viable idea                                │ IndieHacke │
+│    │ 0     │    │ 0   │    │ 0   │    │ No viable productizable idea clearly descr... │ IndieHacke │
+│    │ 0     │    │ 0   │    │ 0   │    │ No viable idea                                │ MicroSaaS  │
+└────┴───────┴────┴─────┴────┴─────┴────┴───────────────────────────────────────────────┴────────────┘
+
+P=Practicality, $=Profitability, D=Distribution, C=Competition, M=Moat

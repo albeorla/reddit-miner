@@ -1,0 +1,5 @@
+2025-12-16 13:14:48 [info     ] database_connected             path=idea_miner.sqlite3
+2025-12-16 13:14:48 [info     ] database_closed
+✓ Report generated: reports/idea_report_1_20251216_131448.md
+
+Open with: cat reports/idea_report_1_20251216_131448.md

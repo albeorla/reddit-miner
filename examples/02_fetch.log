@@ -1,0 +1,36 @@
+
+Fetching posts from 3 subreddits...
+[2m2025-12-16T18:14:05.304530Z[0m [[32m[1minfo     [0m] [1mfetch_only_starting           [0m [[0m[1m[34midea_miner.pipeline[0m][0m [36msubreddits[0m=[35m['SideProject', 'IndieHackers', 'MicroSaaS'][0m
+[2m2025-12-16T18:14:05.305194Z[0m [[32m[1minfo     [0m] [1mdatabase_connected            [0m [[0m[1m[34midea_miner.store.core[0m][0m [36mpath[0m=[35midea_miner.sqlite3[0m
+[2m2025-12-16T18:14:05.305604Z[0m [[32m[1minfo     [0m] [1mdatabase_initialized          [0m [[0m[1m[34midea_miner.store.core[0m][0m
+[2m2025-12-16T18:14:05.323930Z[0m [[32m[1minfo     [0m] [1mfetching_subreddit            [0m [[0m[1m[34midea_miner.reddit_async[0m][0m [36mlisting[0m=[35mnew[0m [36msubreddit[0m=[35mSideProject[0m
+[2m2025-12-16T18:14:05.326749Z[0m [[32m[1minfo     [0m] [1mfetching_subreddit            [0m [[0m[1m[34midea_miner.reddit_async[0m][0m [36mlisting[0m=[35mnew[0m [36msubreddit[0m=[35mIndieHackers[0m
+[2m2025-12-16T18:14:05.326979Z[0m [[32m[1minfo     [0m] [1mfetching_subreddit            [0m [[0m[1m[34midea_miner.reddit_async[0m][0m [36mlisting[0m=[35mnew[0m [36msubreddit[0m=[35mMicroSaaS[0m
+HTTP Request: GET https://www.reddit.com/r/SideProject/new.rss "HTTP/1.1 200 OK"
+[2m2025-12-16T18:14:05.677482Z[0m [[32m[1minfo     [0m] [1mrss_fetched                   [0m [[0m[1m[34midea_miner.reddit_async[0m][0m [36mposts[0m=[35m25[0m [36msubreddit[0m=[35mSideProject[0m
+HTTP Request: GET https://www.reddit.com/r/MicroSaaS/new.rss "HTTP/1.1 200 OK"
+HTTP Request: GET https://www.reddit.com/r/IndieHackers/new.rss "HTTP/1.1 200 OK"
+[2m2025-12-16T18:14:05.814931Z[0m [[32m[1minfo     [0m] [1mrss_fetched                   [0m [[0m[1m[34midea_miner.reddit_async[0m][0m [36mposts[0m=[35m25[0m [36msubreddit[0m=[35mMicroSaaS[0m
+[2m2025-12-16T18:14:05.843700Z[0m [[32m[1minfo     [0m] [1mrss_fetched                   [0m [[0m[1m[34midea_miner.reddit_async[0m][0m [36mposts[0m=[35m25[0m [36msubreddit[0m=[35mIndieHackers[0m
+HTTP Request: GET https://www.reddit.com/r/SideProject/comments/1po948d/what_hosting_platforms_are_you_using/.json "HTTP/1.1 200 OK"
+HTTP Request: GET https://www.reddit.com/r/microsaas/comments/1po8tqy/foundersneed_your_feedback_here_built_an_ai/.json "HTTP/1.1 200 OK"
+HTTP Request: GET https://www.reddit.com/r/indiehackers/comments/1po486c/just_landed_my_second_partnership_for_tracekit/.json "HTTP/1.1 200 OK"
+HTTP Request: GET https://www.reddit.com/r/SideProject/comments/1po913h/whatsapp_wrapped_every_whatsapp_analytics_tool/.json "HTTP/1.1 200 OK"
+HTTP Request: GET https://www.reddit.com/r/microsaas/comments/1po8n77/looking_for_some_advice_on_my_first_demo_video/.json "HTTP/1.1 200 OK"
+HTTP Request: GET https://www.reddit.com/r/indiehackers/comments/1po436k/what_rebuilding_onboarding_taught_me_about_event/.json "HTTP/1.1 200 OK"
+HTTP Request: GET https://www.reddit.com/r/SideProject/comments/1po8y9w/moz_da_50/.json "HTTP/1.1 200 OK"
+HTTP Request: GET https://www.reddit.com/r/microsaas/comments/1po8jo1/super_promo_perplexity_ai_pro_offer_95_cheaper/.json "HTTP/1.1 200 OK"
+HTTP Request: GET https://www.reddit.com/r/indiehackers/comments/1pnhufr/moderator_bot_is_live/.json "HTTP/1.1 200 OK"
+HTTP Request: GET https://www.reddit.com/r/SideProject/comments/1po8vxg/i_thought_content_marketing_was_slow_turns_out_i/.json "HTTP/1.1 200 OK"
+HTTP Request: GET https://www.reddit.com/r/microsaas/comments/1po8d4h/product_hunt_alternatives_sheet/.json "HTTP/1.1 200 OK"
+HTTP Request: GET https://www.reddit.com/r/indiehackers/comments/1pnhjxg/anyone_else_building_earlystage_and_feeling_busy/.json "HTTP/1.1 200 OK"
+HTTP Request: GET https://www.reddit.com/r/SideProject/comments/1po8ttv/whats_the_messiest_expense_situation_youve_had/.json "HTTP/1.1 200 OK"
+[2m2025-12-16T18:14:08.689729Z[0m [[32m[1minfo     [0m] [1msubreddit_complete            [0m [[0m[1m[34midea_miner.reddit_async[0m][0m [36mposts_fetched[0m=[35m5[0m [36msubreddit[0m=[35mSideProject[0m
+HTTP Request: GET https://www.reddit.com/r/indiehackers/comments/1pnh881/i_built_a_laravel_installer_because_shared/.json "HTTP/1.1 200 OK"
+[2m2025-12-16T18:14:09.012640Z[0m [[32m[1minfo     [0m] [1msubreddit_complete            [0m [[0m[1m[34midea_miner.reddit_async[0m][0m [36mposts_fetched[0m=[35m5[0m [36msubreddit[0m=[35mIndieHackers[0m
+HTTP Request: GET https://www.reddit.com/r/microsaas/comments/1po800z/what_small_detail_made_your_mvp_feel_lovable/.json "HTTP/1.1 200 OK"
+[2m2025-12-16T18:14:09.248903Z[0m [[32m[1minfo     [0m] [1msubreddit_complete            [0m [[0m[1m[34midea_miner.reddit_async[0m][0m [36mposts_fetched[0m=[35m5[0m [36msubreddit[0m=[35mMicroSaaS[0m
+[2m2025-12-16T18:14:09.250406Z[0m [[32m[1minfo     [0m] [1mall_subreddits_complete       [0m [[0m[1m[34midea_miner.reddit_async[0m][0m [36mtotal_posts[0m=[35m15[0m
+[2m2025-12-16T18:14:09.252366Z[0m [[32m[1minfo     [0m] [1mposts_upserted                [0m [[0m[1m[34midea_miner.store.core[0m][0m [36mcount[0m=[35m15[0m
+[2m2025-12-16T18:14:09.252669Z[0m [[32m[1minfo     [0m] [1mdatabase_closed               [0m [[0m[1m[34midea_miner.store.core[0m][0m
+✓ Fetched 15 posts
