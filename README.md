@@ -4,6 +4,8 @@ A modern async Python CLI for mining Reddit for microSaaS and side-hustle ideas 
 
 **No Reddit API keys required!** Uses RSS feeds and public JSON endpoints.
 
+![CLI Demo](examples/demo.gif)
+
 ## Features
 
 - **No API keys needed** - Uses Reddit RSS feeds + JSON endpoints
