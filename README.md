@@ -200,6 +200,69 @@ src/idea_miner/
 └── config.py            # Pydantic Settings
 ```
 
+## Example Output
+
+See the [`examples/`](examples/) directory for full CLI logs and a sample report.
+
+### Sample Pipeline Run
+
+```
+$ idea-miner run -s SideProject -s IndieHackers -l 5 -p 15
+
+Idea Miner - Mining 2 subreddits
+  Subreddits: SideProject, IndieHackers
+  Posts per subreddit: 5
+  Model: gpt-4o
+
+✓ Pipeline complete (Run #1)
+  Posts fetched: 15
+  Posts analyzed: 15
+  Ideas saved: 15
+  Qualified: 3
+  Errors: 0
+
+Top Ideas:
+┏━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Score  ┃ Idea                                               ┃ Subreddit       ┃
+┡━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ 25     │ A privacy-first "WhatsApp Wrapped" analytics ap... │ SideProject     │
+│ 21     │ An event-driven onboarding tool that splits onb... │ IndieHackers    │
+│ 20     │ A configurable moderator bot that enforces cust... │ IndieHackers    │
+└────────┴────────────────────────────────────────────────────┴─────────────────┘
+```
+
+### Top Idea Details
+
+```
+$ idea-miner show 1
+
+Idea #1
+────────────────────────────────────────────────────────────────
+
+Summary: A privacy-first "WhatsApp Wrapped" analytics app
+
+Score: 25/50
+  Practicality:  6/10
+  Profitability: 3/10
+  Distribution:  5/10
+  Competition:   6/10
+  Moat:          5/10
+
+Target User: Consumer users who want insights into their WhatsApp usage
+Pain Point: Users want Spotify Wrapped-style analytics for WhatsApp
+Evidence Strength: 4/10
+
+Evidence:
+  • "WhatsApp Wrapped – every WhatsApp analytics tool..." (post)
+  • "People would love yearly chat stats" (comment)
+
+Validation Steps:
+  • Survey WhatsApp users on privacy concerns
+  • Build MVP with local-only processing
+```
+
+See [examples/sample_report.md](examples/sample_report.md) for a full analysis report.
+
 ## Rate Limiting
 
 Reddit may rate-limit aggressive scraping. Built-in protections:
