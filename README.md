@@ -4,6 +4,8 @@
 
 No scraping private data. No auto-outreach. Cites sources. Filters self-promo.
 
+![Pain Radar CLI Demo](examples/demo.gif)
+
 ## What It Does
 
 Pain Radar tracks what Redditors are struggling with and groups similar frustrations into actionable clusters. Use it to:
@@ -17,8 +19,8 @@ Pain Radar tracks what Redditors are struggling with and groups similar frustrat
 
 ```bash
 # Clone the repo
-git clone https://github.com/yourusername/pain-radar
-cd pain-radar
+git clone https://github.com/albeorla/reddit-miner
+cd reddit-miner
 
 # Create virtual environment
 python -m venv .venv
@@ -261,7 +263,7 @@ src/pain_radar/
 │   ├── pipeline.py     # run command
 │   ├── fetch.py        # fetch command
 │   ├── cluster.py      # cluster + digest commands
-│   ├── ideas.py        # top, show, export
+│   ├── ideas.py        # top, show, export (signals)
 │   └── report.py       # report, runs
 ├── store/               # Storage layer
 │   ├── schema.py       # SQL schema

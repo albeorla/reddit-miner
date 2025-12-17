@@ -738,7 +738,7 @@ class AsyncStore:
                             "watchlist_name": wl["name"],
                             "signal_id": signal["id"],
                             "keyword_matched": keyword,
-                            "signal_summary": signal["idea_summary"],
+                            "signal_summary": signal["signal_summary"],
                             "pain_point": signal["pain_point"],
                             "subreddit": signal["subreddit"],
                             "url": signal["url"],

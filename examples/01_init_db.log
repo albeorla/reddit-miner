@@ -1,4 +1,0 @@
-2025-12-16 13:14:04 [info     ] database_connected             path=idea_miner.sqlite3
-2025-12-16 13:14:04 [info     ] database_initialized
-2025-12-16 13:14:04 [info     ] database_closed
-✓ Database initialized: idea_miner.sqlite3
