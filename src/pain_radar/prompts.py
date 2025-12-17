@@ -30,7 +30,7 @@ If extractable:
 2. Identify the PAIN SIGNAL:
    - pain_point: The specific frustration or problem (be precise)
    - target_user: Who experiences this pain
-   - idea_summary: 1-sentence synthesis of what people are struggling with
+   - signal_summary: 1-sentence synthesis of what people are struggling with
 
 3. Extract EVIDENCE with proper attribution:
    - quote: Exact text (max 25 words) - use the most emotionally resonant quotes
@@ -141,7 +141,7 @@ Score the signal on these dimensions (0-10 each):
 
 Be conservative. Most signals score 4-6. Only exceptional signals score 8+."""
 
-SCORE_USER_TEMPLATE = """Pain Signal Summary: {idea_summary}
+SCORE_USER_TEMPLATE = """Pain Signal Summary: {signal_summary}
 
 Target User: {target_user}
 
@@ -185,7 +185,7 @@ CLUSTERING GUIDELINES
    - **target_audience**: Who cares about this? Be specific.
    - **why_it_matters**: Why is this a real opportunity?
    - **quotes**: 2-3 of the BEST verbatim quotes that illustrate the pain (emotionally resonant)
-   - **idea_ids**: The IDs of signals in this cluster
+   - **signal_ids**: The IDs of signals in this cluster
    - **urls**: The URLs of the source threads
 
 ═══════════════════════════════════════════════════════════════

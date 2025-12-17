@@ -84,8 +84,8 @@ class CompetitorNote(BaseModel):
     )
 
 
-class IdeaExtraction(BaseModel):
-    """Structured output for idea extraction from Reddit content."""
+class PainSignal(BaseModel):
+    """Structured output for pain signal extraction from Reddit content."""
 
     extraction_state: ExtractionState = Field(
         ...,
@@ -97,9 +97,9 @@ class IdeaExtraction(BaseModel):
         description="Type of extraction: 'idea' (has solution) or 'pain' (problem only)"
     )
     
-    idea_summary: str = Field(
+    signal_summary: str = Field(
         ..., 
-        description="One sentence summary of the idea (or 'No viable idea' if not extractable)"
+        description="One sentence summary of the pain signal (or 'No viable signal' if not extractable)"
     )
     target_user: str = Field(
         default="",
@@ -143,12 +143,12 @@ class IdeaExtraction(BaseModel):
     )
 
 
-class IdeaScore(BaseModel):
-    """Structured output for idea scoring and evaluation."""
+class SignalScore(BaseModel):
+    """Structured output for signal scoring and evaluation."""
 
     # Disqualification
     disqualified: bool = Field(
-        ..., description="Whether the idea is disqualified"
+        ..., description="Whether the signal is disqualified"
     )
     disqualify_reasons: List[str] = Field(
         default_factory=list,
@@ -217,22 +217,22 @@ class IdeaScore(BaseModel):
     )
     next_validation_steps: List[str] = Field(
         default_factory=list, 
-        description="Recommended next steps to validate the idea"
+        description="Recommended next steps to validate the signal"
     )
 
 
 class FullAnalysis(BaseModel):
     """Complete analysis output including extraction and scoring."""
 
-    extraction: IdeaExtraction
-    score: Optional[IdeaScore] = Field(
+    extraction: PainSignal
+    score: Optional[SignalScore] = Field(
         default=None,
         description="Score is None if extraction_state != 'extracted'"
     )
 
 
 class ClusterItem(BaseModel):
-    """A minimal reference to an extracted pain/idea for clustering."""
+    """A minimal reference to an extracted pain signal for clustering."""
     
     id: int
     summary: str
@@ -250,8 +250,8 @@ class Cluster(BaseModel):
     target_audience: str = Field(..., description="Who is affected")
     why_it_matters: str = Field(..., description="Why this is a good opportunity")
     
-    # IDs of ideas in this cluster
-    idea_ids: List[int] = Field(..., description="List of idea IDs included in this cluster")
+    # IDs of signals in this cluster
+    signal_ids: List[int] = Field(..., description="List of signal IDs included in this cluster")
     
     # Selected quotes for the digest
     quotes: List[str] = Field(..., description="2-3 best verbatim quotes illustrating the pain")
@@ -259,3 +259,7 @@ class Cluster(BaseModel):
     # URLs for the digest
     urls: List[str] = Field(..., description="URLs to the source threads")
 
+
+# Backward compatibility aliases (deprecated, use new names)
+IdeaExtraction = PainSignal
+IdeaScore = SignalScore

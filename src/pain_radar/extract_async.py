@@ -12,7 +12,7 @@ from tenacity import (
 )
 
 from .logging_config import get_logger
-from .models import IdeaExtraction
+from .models import PainSignal
 from .prompts import EXTRACT_SYSTEM_PROMPT, EXTRACT_USER_TEMPLATE
 from .reddit_async import RedditPost
 
@@ -37,7 +37,7 @@ EXTRACT_PROMPT = ChatPromptTemplate.from_messages([
     wait=wait_exponential_jitter(initial=1, max=30),
     retry=retry_if_exception_type((TimeoutError, ConnectionError)),
 )
-async def extract_idea(llm: BaseChatModel, post: RedditPost) -> IdeaExtraction:
+async def extract_idea(llm: BaseChatModel, post: RedditPost) -> PainSignal:
     """Extract a business idea from a Reddit post using LLM.
 
     Args:
@@ -45,7 +45,7 @@ async def extract_idea(llm: BaseChatModel, post: RedditPost) -> IdeaExtraction:
         post: Reddit post to analyze
 
     Returns:
-        IdeaExtraction with structured idea details
+        PainSignal with structured idea details
 
     Raises:
         LLMExtractionError: If extraction fails
@@ -54,7 +54,7 @@ async def extract_idea(llm: BaseChatModel, post: RedditPost) -> IdeaExtraction:
 
     try:
         # Create chain with structured output
-        chain = EXTRACT_PROMPT | llm.with_structured_output(IdeaExtraction)
+        chain = EXTRACT_PROMPT | llm.with_structured_output(PainSignal)
 
         # Format comments with indices
         comments_formatted = "\n\n".join(
@@ -71,7 +71,7 @@ async def extract_idea(llm: BaseChatModel, post: RedditPost) -> IdeaExtraction:
         logger.info(
             "idea_extracted",
             post_id=post.id,
-            idea=result.idea_summary[:100],
+            idea=result.signal_summary[:100],
             signals_count=len(result.evidence_signals),
         )
         return result

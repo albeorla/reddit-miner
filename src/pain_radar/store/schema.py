@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS posts (
     processed INTEGER DEFAULT 0
 );
 
-CREATE TABLE IF NOT EXISTS ideas (
+CREATE TABLE IF NOT EXISTS signals (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     post_id TEXT NOT NULL,
     run_id INTEGER,
@@ -26,8 +26,8 @@ CREATE TABLE IF NOT EXISTS ideas (
     extraction_state TEXT NOT NULL DEFAULT 'extracted',  -- extracted, not_extractable, disqualified
     not_extractable_reason TEXT,
     
-    -- Extraction fields
-    idea_summary TEXT NOT NULL,
+    -- Extraction fields (renamed from idea_summary for clarity)
+    signal_summary TEXT NOT NULL,
     target_user TEXT,
     pain_point TEXT,
     proposed_solution TEXT,
@@ -77,8 +77,8 @@ CREATE TABLE IF NOT EXISTS runs (
     subreddits TEXT,  -- JSON array
     posts_fetched INTEGER DEFAULT 0,
     posts_analyzed INTEGER DEFAULT 0,
-    ideas_saved INTEGER DEFAULT 0,
-    qualified_ideas INTEGER DEFAULT 0,
+    signals_saved INTEGER DEFAULT 0,
+    qualified_signals INTEGER DEFAULT 0,
     not_extractable INTEGER DEFAULT 0,
     errors INTEGER DEFAULT 0,
     status TEXT DEFAULT 'running',  -- running, completed, failed
@@ -97,14 +97,14 @@ CREATE TABLE IF NOT EXISTS processing_log (
 
 CREATE INDEX IF NOT EXISTS idx_posts_subreddit ON posts(subreddit);
 CREATE INDEX IF NOT EXISTS idx_posts_processed ON posts(processed);
-CREATE INDEX IF NOT EXISTS idx_ideas_post_id ON ideas(post_id);
-CREATE INDEX IF NOT EXISTS idx_ideas_run_id ON ideas(run_id);
-CREATE INDEX IF NOT EXISTS idx_ideas_total_score ON ideas(total_score DESC);
-CREATE INDEX IF NOT EXISTS idx_ideas_disqualified ON ideas(disqualified);
-CREATE INDEX IF NOT EXISTS idx_ideas_extraction_state ON ideas(extraction_state);
+CREATE INDEX IF NOT EXISTS idx_signals_post_id ON signals(post_id);
+CREATE INDEX IF NOT EXISTS idx_signals_run_id ON signals(run_id);
+CREATE INDEX IF NOT EXISTS idx_signals_total_score ON signals(total_score DESC);
+CREATE INDEX IF NOT EXISTS idx_signals_disqualified ON signals(disqualified);
+CREATE INDEX IF NOT EXISTS idx_signals_extraction_state ON signals(extraction_state);
 
--- Prevent duplicate ideas for the same post in the same run
-CREATE UNIQUE INDEX IF NOT EXISTS idx_ideas_post_run_unique ON ideas(post_id, run_id);
+-- Prevent duplicate signals for the same post in the same run
+CREATE UNIQUE INDEX IF NOT EXISTS idx_signals_post_run_unique ON signals(post_id, run_id);
 
 CREATE TABLE IF NOT EXISTS clusters (
     id TEXT PRIMARY KEY,
@@ -146,13 +146,13 @@ CREATE TABLE IF NOT EXISTS watchlists (
 CREATE TABLE IF NOT EXISTS alert_matches (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     watchlist_id INTEGER NOT NULL,
-    idea_id INTEGER NOT NULL,
+    signal_id INTEGER NOT NULL,
     keyword_matched TEXT NOT NULL,
     created_at TEXT NOT NULL,
     notified INTEGER DEFAULT 0,
     notified_at TEXT,
     FOREIGN KEY (watchlist_id) REFERENCES watchlists(id),
-    FOREIGN KEY (idea_id) REFERENCES ideas(id)
+    FOREIGN KEY (signal_id) REFERENCES signals(id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_clusters_week ON clusters(week_start);
@@ -160,4 +160,22 @@ CREATE INDEX IF NOT EXISTS idx_alerts_email ON alerts(email);
 CREATE INDEX IF NOT EXISTS idx_watchlists_active ON watchlists(is_active);
 CREATE INDEX IF NOT EXISTS idx_alert_matches_watchlist ON alert_matches(watchlist_id);
 CREATE INDEX IF NOT EXISTS idx_alert_matches_notified ON alert_matches(notified);
+"""
+
+# Migration from old schema (ideas -> signals)
+MIGRATION_V2 = """
+-- Rename ideas table to signals if it exists
+ALTER TABLE ideas RENAME TO signals;
+
+-- Rename columns
+ALTER TABLE signals RENAME COLUMN idea_summary TO signal_summary;
+
+-- Update runs table columns
+ALTER TABLE runs RENAME COLUMN ideas_saved TO signals_saved;
+ALTER TABLE runs RENAME COLUMN qualified_ideas TO qualified_signals;
+
+-- Update alert_matches
+ALTER TABLE alert_matches RENAME COLUMN idea_id TO signal_id;
+
+-- Update index names (SQLite doesn't support renaming indexes, they'll be recreated)
 """

@@ -12,7 +12,7 @@ from tenacity import (
 )
 
 from .logging_config import get_logger
-from .models import IdeaExtraction, IdeaScore
+from .models import PainSignal, SignalScore
 from .prompts import SCORE_SYSTEM_PROMPT, SCORE_USER_TEMPLATE
 
 logger = get_logger(__name__)
@@ -36,28 +36,28 @@ SCORE_PROMPT = ChatPromptTemplate.from_messages([
     wait=wait_exponential_jitter(initial=1, max=30),
     retry=retry_if_exception_type((TimeoutError, ConnectionError)),
 )
-async def score_idea(llm: BaseChatModel, extraction: IdeaExtraction) -> IdeaScore:
+async def score_idea(llm: BaseChatModel, extraction: PainSignal) -> SignalScore:
     """Score an extracted idea using LLM.
 
     Args:
         llm: LangChain chat model with structured output support
-        extraction: IdeaExtraction to score
+        extraction: PainSignal to score
 
     Returns:
-        IdeaScore with rubric scores and evaluation
+        SignalScore with rubric scores and evaluation
 
     Raises:
         LLMScoringError: If scoring fails
     """
-    logger.debug("scoring_idea", idea=extraction.idea_summary[:50])
+    logger.debug("scoring_idea", idea=extraction.signal_summary[:50])
 
     try:
         # Create chain with structured output
-        chain = SCORE_PROMPT | llm.with_structured_output(IdeaScore)
+        chain = SCORE_PROMPT | llm.with_structured_output(SignalScore)
 
         # Invoke the chain
         result = await chain.ainvoke({
-            "idea_summary": extraction.idea_summary,
+            "signal_summary": extraction.signal_summary,
             "target_user": extraction.target_user,
             "pain_point": extraction.pain_point,
             "proposed_solution": extraction.proposed_solution,
@@ -67,12 +67,12 @@ async def score_idea(llm: BaseChatModel, extraction: IdeaExtraction) -> IdeaScor
 
         logger.info(
             "idea_scored",
-            idea=extraction.idea_summary[:50],
+            idea=extraction.signal_summary[:50],
             total=result.total,
             disqualified=result.disqualified,
         )
         return result
 
     except Exception as e:
-        logger.error("scoring_failed", idea=extraction.idea_summary[:50], error=str(e))
+        logger.error("scoring_failed", idea=extraction.signal_summary[:50], error=str(e))
         raise LLMScoringError(f"Failed to score idea: {e}") from e

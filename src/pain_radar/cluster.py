@@ -1,4 +1,4 @@
-"""Logic for clustering ideas into Pain Pattern Clusters."""
+"""Logic for clustering pain signals into Pain Pattern Clusters."""
 
 import json
 from typing import List
@@ -6,7 +6,7 @@ from typing import List
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
-from .models import Cluster, ClusterItem, IdeaExtraction, EvidenceSignal
+from .models import Cluster, ClusterItem, PainSignal, EvidenceSignal
 from .prompts import CLUSTER_SYSTEM_PROMPT, CLUSTER_USER_TEMPLATE
 from .config import settings
 

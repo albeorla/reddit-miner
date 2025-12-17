@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 
 
 class AsyncStore:
-    """Async SQLite storage for posts and ideas."""
+    """Async SQLite storage for posts and signals."""
 
     def __init__(self, db_path: str):
         """Initialize the store.
@@ -146,7 +146,7 @@ class AsyncStore:
             )
             await conn.commit()
 
-    async def save_idea(
+    async def save_signal(
         self,
         post: RedditPost,
         extraction: Any,
@@ -154,17 +154,17 @@ class AsyncStore:
         cluster_id: Optional[str] = None,
         run_id: Optional[int] = None,
     ) -> int:
-        """Save an extracted and scored idea.
+        """Save an extracted and scored signal.
 
         Args:
             post: Source Reddit post
-            extraction: IdeaExtraction Pydantic model
-            score: IdeaScore Pydantic model (None if not_extractable)
+            extraction: PainSignal Pydantic model
+            score: SignalScore Pydantic model (None if not_extractable)
             cluster_id: Optional cluster identifier
-            run_id: Optional run ID to associate with this idea
+            run_id: Optional run ID to associate with this signal
 
         Returns:
-            ID of the inserted idea
+            ID of the inserted signal
         """
         async with self.connection() as conn:
             now = datetime.now(timezone.utc).isoformat()
@@ -210,10 +210,10 @@ class AsyncStore:
 
             cursor = await conn.execute(
                 """
-                INSERT INTO ideas (
+                INSERT INTO signals (
                     post_id, run_id, cluster_id, 
                     extraction_state, not_extractable_reason,
-                    idea_summary, target_user, pain_point,
+                    signal_summary, target_user, pain_point,
                     proposed_solution, evidence, evidence_strength, evidence_strength_reason,
                     evidence_signals, risk_flags,
                     disqualified, disqualify_reasons, practicality, profitability,
@@ -228,7 +228,7 @@ class AsyncStore:
                     cluster_id,
                     extraction_state,
                     extraction.not_extractable_reason,
-                    extraction.idea_summary,
+                    extraction.signal_summary,
                     extraction.target_user,
                     extraction.pain_point,
                     extraction.proposed_solution,
@@ -261,39 +261,39 @@ class AsyncStore:
             # Mark the post as processed
             await self.mark_post_processed(post.id)
 
-            idea_id = cursor.lastrowid
+            signal_id = cursor.lastrowid
             logger.info(
-                "idea_saved",
-                idea_id=idea_id,
+                "signal_saved",
+                signal_id=signal_id,
                 post_id=post.id,
                 extraction_state=extraction_state,
                 total_score=total_score,
                 evidence_strength=extraction.evidence_strength,
                 disqualified=bool(disqualified),
             )
-            return idea_id
+            return signal_id
 
-    async def get_top_ideas(
+    async def get_top_signals(
         self, limit: int = 20, include_disqualified: bool = False
     ) -> List[dict]:
-        """Get top-scored ideas.
+        """Get top-scored signals.
 
         Args:
-            limit: Maximum number of ideas to return
-            include_disqualified: Whether to include disqualified ideas
+            limit: Maximum number of signals to return
+            include_disqualified: Whether to include disqualified signals
 
         Returns:
-            List of idea dictionaries
+            List of signal dictionaries
         """
         async with self.connection() as conn:
             query = """
                 SELECT i.*, p.title as post_title, p.subreddit, p.permalink
-                FROM ideas i
-                JOIN posts p ON i.post_id = p.id
+                FROM signals i
+                JOIN posts p ON s.post_id = p.id
             """
             if not include_disqualified:
-                query += " WHERE i.disqualified = 0"
-            query += " ORDER BY i.total_score DESC LIMIT ?"
+                query += " WHERE s.disqualified = 0"
+            query += " ORDER BY s.total_score DESC LIMIT ?"
 
             cursor = await conn.execute(query, (limit,))
             rows = await cursor.fetchall()
@@ -315,14 +315,14 @@ class AsyncStore:
             cursor = await conn.execute("SELECT COUNT(*) FROM posts WHERE processed = 1")
             stats["processed_posts"] = (await cursor.fetchone())[0]
 
-            cursor = await conn.execute("SELECT COUNT(*) FROM ideas")
-            stats["total_ideas"] = (await cursor.fetchone())[0]
+            cursor = await conn.execute("SELECT COUNT(*) FROM signals")
+            stats["total_signals"] = (await cursor.fetchone())[0]
 
-            cursor = await conn.execute("SELECT COUNT(*) FROM ideas WHERE disqualified = 0")
-            stats["qualified_ideas"] = (await cursor.fetchone())[0]
+            cursor = await conn.execute("SELECT COUNT(*) FROM signals WHERE disqualified = 0")
+            stats["qualified_signals"] = (await cursor.fetchone())[0]
 
             cursor = await conn.execute(
-                "SELECT AVG(total_score) FROM ideas WHERE disqualified = 0"
+                "SELECT AVG(total_score) FROM signals WHERE disqualified = 0"
             )
             avg = (await cursor.fetchone())[0]
             stats["avg_score"] = round(avg, 2) if avg else 0
@@ -357,8 +357,8 @@ class AsyncStore:
         run_id: int,
         posts_fetched: int = 0,
         posts_analyzed: int = 0,
-        ideas_saved: int = 0,
-        qualified_ideas: int = 0,
+        signals_saved: int = 0,
+        qualified_signals: int = 0,
         errors: int = 0,
         status: str = "completed",
         report_path: Optional[str] = None,
@@ -369,8 +369,8 @@ class AsyncStore:
             run_id: Run ID to update
             posts_fetched: Number of posts fetched
             posts_analyzed: Number of posts analyzed
-            ideas_saved: Number of ideas saved
-            qualified_ideas: Number of qualified ideas
+            signals_saved: Number of signals saved
+            qualified_signals: Number of qualified signals
             errors: Number of errors
             status: Run status
             report_path: Path to generated report
@@ -383,8 +383,8 @@ class AsyncStore:
                     completed_at = ?,
                     posts_fetched = ?,
                     posts_analyzed = ?,
-                    ideas_saved = ?,
-                    qualified_ideas = ?,
+                    signals_saved = ?,
+                    qualified_signals = ?,
                     errors = ?,
                     status = ?,
                     report_path = ?
@@ -394,8 +394,8 @@ class AsyncStore:
                     now,
                     posts_fetched,
                     posts_analyzed,
-                    ideas_saved,
-                    qualified_ideas,
+                    signals_saved,
+                    qualified_signals,
                     errors,
                     status,
                     report_path,
@@ -441,49 +441,49 @@ class AsyncStore:
             row = await cursor.fetchone()
         return dict(row) if row else None
 
-    async def get_ideas_for_run(self, run_id: int) -> List[dict]:
-        """Get all ideas from a specific run.
+    async def get_signals_for_run(self, run_id: int) -> List[dict]:
+        """Get all signals from a specific run.
 
         Args:
             run_id: Run ID
 
         Returns:
-            List of idea dictionaries with post info
+            List of signal dictionaries with post info
         """
         async with self.connection() as conn:
             cursor = await conn.execute(
                 """
                 SELECT i.*, p.title as post_title, p.subreddit, p.permalink,
                        p.body as post_body, p.top_comments
-                FROM ideas i
-                JOIN posts p ON i.post_id = p.id
-                WHERE i.run_id = ?
-                ORDER BY i.total_score DESC
+                FROM signals i
+                JOIN posts p ON s.post_id = p.id
+                WHERE s.run_id = ?
+                ORDER BY s.total_score DESC
                 """,
                 (run_id,),
             )
             rows = await cursor.fetchall()
         return [dict(row) for row in rows]
 
-    async def get_idea_detail(self, idea_id: int) -> Optional[dict]:
-        """Get detailed information about a specific idea.
+    async def get_signal_detail(self, signal_id: int) -> Optional[dict]:
+        """Get detailed information about a specific signal.
 
         Args:
-            idea_id: Idea ID
+            signal_id: Signal ID
 
         Returns:
-            Detailed idea dictionary or None
+            Detailed signal dictionary or None
         """
         async with self.connection() as conn:
             cursor = await conn.execute(
                 """
                 SELECT i.*, p.title as post_title, p.subreddit, p.permalink,
                        p.body as post_body, p.top_comments, p.url as post_url
-                FROM ideas i
-                JOIN posts p ON i.post_id = p.id
+                FROM signals i
+                JOIN posts p ON s.post_id = p.id
                 WHERE i.id = ?
                 """,
-                (idea_id,),
+                (signal_id,),
             )
             row = await cursor.fetchone()
         return dict(row) if row else None
@@ -502,12 +502,12 @@ class AsyncStore:
         """
         async with self.connection() as conn:
             query = """
-                SELECT i.id, i.idea_summary, i.pain_point, i.evidence, 
+                SELECT i.id, i.signal_summary, i.pain_point, i.evidence, 
                        p.subreddit, p.url
-                FROM ideas i
-                JOIN posts p ON i.post_id = p.id
+                FROM signals i
+                JOIN posts p ON s.post_id = p.id
                 WHERE i.cluster_id IS NULL
-                AND i.disqualified = 0
+                AND s.disqualified = 0
                 AND datetime(i.created_at) > datetime('now', ?)
             """
             params = [f"-{days} days"]
@@ -526,7 +526,7 @@ class AsyncStore:
             
             items.append(ClusterItem(
                 id=row["id"],
-                summary=row["idea_summary"],
+                summary=row["signal_summary"],
                 pain_point=row["pain_point"],
                 subreddit=row["subreddit"],
                 url=row["url"],
@@ -536,7 +536,7 @@ class AsyncStore:
         return items
 
     async def save_clusters(self, clusters: List[Cluster], week_start: str) -> None:
-        """Save generated clusters and link ideas.
+        """Save generated clusters and link signals.
         
         Args:
             clusters: List of Cluster objects
@@ -547,7 +547,7 @@ class AsyncStore:
             
             for cluster in clusters:
                 # Generate a simple ID if not present (handled by caller usually, but let's make one)
-                cluster_id = f"{week_start}_{cluster.title[:10].replace(' ', '_').lower()}_{len(cluster.idea_ids)}"
+                cluster_id = f"{week_start}_{cluster.title[:10].replace(' ', '_').lower()}_{len(cluster.signal_ids)}"
                 
                 # Insert cluster
                 await conn.execute(
@@ -567,11 +567,11 @@ class AsyncStore:
                     )
                 )
                 
-                # Update ideas with cluster_id
-                for idea_id in cluster.idea_ids:
+                # Update signals with cluster_id
+                for signal_id in cluster.signal_ids:
                     await conn.execute(
-                        "UPDATE ideas SET cluster_id = ? WHERE id = ?",
-                        (cluster_id, idea_id)
+                        "UPDATE signals SET cluster_id = ? WHERE id = ?",
+                        (cluster_id, signal_id)
                     )
             
             await conn.commit()
@@ -708,12 +708,12 @@ class AsyncStore:
             # Get recent signals
             cursor = await conn.execute(
                 """
-                SELECT i.id, i.idea_summary, i.pain_point, i.evidence,
+                SELECT i.id, i.signal_summary, i.pain_point, i.evidence,
                        p.subreddit, p.url, p.title as post_title
-                FROM ideas i
-                JOIN posts p ON i.post_id = p.id
+                FROM signals i
+                JOIN posts p ON s.post_id = p.id
                 WHERE datetime(i.created_at) > datetime('now', ?)
-                AND i.disqualified = 0
+                AND s.disqualified = 0
                 """,
                 (f"-{since_hours} hours",)
             )
@@ -723,7 +723,7 @@ class AsyncStore:
         now = datetime.now(timezone.utc).isoformat()
         
         for signal in signals:
-            signal_text = f"{signal['idea_summary']} {signal['pain_point']} {signal['post_title']}".lower()
+            signal_text = f"{signal['signal_summary']} {signal['pain_point']} {signal['post_title']}".lower()
             
             for wl in watchlists:
                 # Check subreddit filter
@@ -736,7 +736,7 @@ class AsyncStore:
                         matches.append({
                             "watchlist_id": wl["id"],
                             "watchlist_name": wl["name"],
-                            "idea_id": signal["id"],
+                            "signal_id": signal["id"],
                             "keyword_matched": keyword,
                             "signal_summary": signal["idea_summary"],
                             "pain_point": signal["pain_point"],
@@ -750,18 +750,18 @@ class AsyncStore:
             for match in matches:
                 # Check if already recorded
                 cursor = await conn.execute(
-                    "SELECT id FROM alert_matches WHERE watchlist_id = ? AND idea_id = ?",
-                    (match["watchlist_id"], match["idea_id"])
+                    "SELECT id FROM alert_matches WHERE watchlist_id = ? AND signal_id = ?",
+                    (match["watchlist_id"], match["signal_id"])
                 )
                 existing = await cursor.fetchone()
                 
                 if not existing:
                     await conn.execute(
                         """
-                        INSERT INTO alert_matches (watchlist_id, idea_id, keyword_matched, created_at)
+                        INSERT INTO alert_matches (watchlist_id, signal_id, keyword_matched, created_at)
                         VALUES (?, ?, ?, ?)
                         """,
-                        (match["watchlist_id"], match["idea_id"], match["keyword_matched"], now)
+                        (match["watchlist_id"], match["signal_id"], match["keyword_matched"], now)
                     )
             
             await conn.commit()
@@ -781,11 +781,11 @@ class AsyncStore:
         async with self.connection() as conn:
             query = """
                 SELECT am.*, w.name as watchlist_name, w.notification_email, w.notification_webhook,
-                       i.idea_summary, i.pain_point, p.subreddit, p.url
+                       i.signal_summary, i.pain_point, p.subreddit, p.url
                 FROM alert_matches am
                 JOIN watchlists w ON am.watchlist_id = w.id
-                JOIN ideas i ON am.idea_id = i.id
-                JOIN posts p ON i.post_id = p.id
+                JOIN signals s ON am.signal_id = i.id
+                JOIN posts p ON s.post_id = p.id
                 WHERE am.notified = 0
             """
             params = []

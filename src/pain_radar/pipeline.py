@@ -26,10 +26,10 @@ class PipelineResult:
     run_id: Optional[int]
     posts_fetched: int
     posts_analyzed: int
-    ideas_saved: int
+    signals_saved: int
     errors: int
-    qualified_ideas: int
-    top_ideas: List[dict]
+    qualified_signals: int
+    top_signals: List[dict]
 
 
 async def process_post(
@@ -46,7 +46,7 @@ async def process_post(
         store: Async storage
         post: Reddit post to process
         sem: Semaphore for concurrency control
-        run_id: Optional run ID to associate with saved ideas
+        run_id: Optional run ID to associate with saved signals
 
     Returns:
         Tuple of (post_id, analysis or None, error message or None)
@@ -54,7 +54,7 @@ async def process_post(
     async with sem:
         try:
             analysis = await analyze_post(llm, post)
-            await store.save_idea(post, analysis.extraction, analysis.score, run_id=run_id)
+            await store.save_signal(post, analysis.extraction, analysis.score, run_id=run_id)
             advance_analyze()
             return (post.id, analysis, None)
         except LLMAnalysisError as e:
@@ -73,7 +73,7 @@ async def run_pipeline(
     fetch_new: bool = True,
     process_limit: Optional[int] = None,
 ) -> PipelineResult:
-    """Run the full idea mining pipeline.
+    """Run the full pain signal pipeline.
 
     Args:
         settings: Application settings
@@ -82,7 +82,7 @@ async def run_pipeline(
         process_limit: Maximum posts to process (None = all)
 
     Returns:
-        PipelineResult with stats and top ideas
+        PipelineResult with stats and top signals
     """
     logger.info(
         "pipeline_starting",
@@ -168,16 +168,16 @@ async def run_pipeline(
             and not analysis.score.disqualified
         )
 
-        # Get top ideas
-        top_ideas = await store.get_top_ideas(limit=10)
+        # Get top signals
+        top_signals = await store.get_top_signals(limit=10)
 
         # Update run record
         await store.update_run(
             run_id=run_id,
             posts_fetched=len(posts),
             posts_analyzed=analyzed,
-            ideas_saved=extracted + disqualified,  # Only save extractable ideas
-            qualified_ideas=qualified,
+            signals_saved=extracted + disqualified,  # Only save extractable signals
+            qualified_signals=qualified,
             errors=errors,
             status="completed",
         )
@@ -198,10 +198,10 @@ async def run_pipeline(
             run_id=run_id,
             posts_fetched=len(posts),
             posts_analyzed=analyzed,
-            ideas_saved=analyzed,
+            signals_saved=analyzed,
             errors=errors,
-            qualified_ideas=qualified,
-            top_ideas=top_ideas,
+            qualified_signals=qualified,
+            top_signals=top_signals,
         )
 
     except Exception as e:
@@ -211,8 +211,8 @@ async def run_pipeline(
                 run_id=run_id,
                 posts_fetched=len(posts),
                 posts_analyzed=0,
-                ideas_saved=0,
-                qualified_ideas=0,
+                signals_saved=0,
+                qualified_signals=0,
                 errors=1,
                 status="failed",
             )

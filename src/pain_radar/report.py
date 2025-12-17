@@ -22,7 +22,7 @@ async def generate_report(
         store: Async store connection
         run_id: Specific run ID, or None for latest run
         output_dir: Directory to save reports
-        include_disqualified: Whether to include disqualified ideas
+        include_disqualified: Whether to include disqualified signals
 
     Returns:
         Path to generated report
@@ -40,23 +40,23 @@ async def generate_report(
             run = runs[0]
             run_id = run["id"]
 
-    # Get ideas
-    ideas = []
+    # Get signals
+    signals = []
     if run_id:
-        ideas = await store.get_ideas_for_run(run_id)
+        signals = await store.get_signals_for_run(run_id)
     
-    # If no ideas for this run, get top ideas overall
+    # If no signals for this run, get top signals overall
     if not ideas:
-        ideas = await store.get_top_ideas(limit=50, include_disqualified=True)
+        signals = await store.get_top_signals(limit=50, include_disqualified=True)
     
     if not ideas:
-        raise ValueError("No ideas found in database. Run 'pain-radar run' first.")
+        raise ValueError("No signals found in database. Run 'pain-radar run' first.")
 
     # Filter out disqualified if needed
     if not include_disqualified:
-        qualified_ideas = [i for i in ideas if not i.get("disqualified")]
+        qualified_signals = [i for i in ideas if not i.get("disqualified")]
     else:
-        qualified_ideas = ideas
+        qualified_signals = ideas
 
     # Get stats
     stats = await store.get_stats()
@@ -72,7 +72,7 @@ async def generate_report(
         }
 
     # Generate report content
-    report = _generate_markdown_report(run, ideas, stats)
+    report = _generate_markdown_report(run, signals, stats)
 
     # Save report
     output_path = Path(output_dir)
@@ -80,7 +80,7 @@ async def generate_report(
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     run_label = run_id if run_id else "all"
-    filename = f"idea_report_{run_label}_{timestamp}.md"
+    filename = f"signal_report_{run_label}_{timestamp}.md"
     report_path = output_path / filename
 
     report_path.write_text(report)
@@ -93,7 +93,7 @@ def _generate_markdown_report(run: dict, ideas: List[dict], stats: dict) -> str:
 
     Args:
         run: Run dictionary
-        ideas: List of idea dictionaries
+        ideas: List of signal dictionaries
         stats: Database statistics
 
     Returns:
@@ -121,17 +121,17 @@ def _generate_markdown_report(run: dict, ideas: List[dict], stats: dict) -> str:
         "",
     ]
 
-    # Top ideas section
+    # Top signals section
     qualified = [i for i in ideas if not i.get("disqualified")]
     if qualified:
         lines.extend([
-            "## 🏆 Top Ideas",
+            "## 🏆 Top Signals",
             "",
         ])
 
-        for rank, idea in enumerate(qualified[:10], 1):
+        for rank, sig in enumerate(qualified[:10], 1):
             score = idea.get("total_score", 0)
-            summary = idea.get("idea_summary", "No summary")
+            summary = idea.get("signal_summary", "No summary")
             subreddit = idea.get("subreddit", "unknown")
             permalink = idea.get("permalink", "")
             
@@ -200,13 +200,13 @@ def _generate_markdown_report(run: dict, ideas: List[dict], stats: dict) -> str:
     disqualified = [i for i in ideas if i.get("disqualified")]
     if disqualified:
         lines.extend([
-            "## ⚠️ Disqualified Ideas",
+            "## ⚠️ Disqualified Signals",
             "",
-            "These ideas were flagged as problematic:",
+            "These signals were flagged as problematic:",
             "",
         ])
         for idea in disqualified[:5]:
-            summary = idea.get("idea_summary", "No summary")[:60]
+            summary = idea.get("signal_summary", "No summary")[:60]
             reasons = idea.get("disqualify_reasons")
             if isinstance(reasons, str):
                 reasons = json.loads(reasons)
@@ -251,10 +251,10 @@ async def generate_json_report(
         if not run:
             raise ValueError(f"Run {run_id} not found")
 
-    # Get ideas
-    ideas = await store.get_ideas_for_run(run_id)
+    # Get signals
+    signals = await store.get_signals_for_run(run_id)
     if not ideas:
-        ideas = await store.get_top_ideas(limit=50, include_disqualified=True)
+        signals = await store.get_top_signals(limit=50, include_disqualified=True)
 
     # Get stats
     stats = await store.get_stats()
@@ -281,7 +281,7 @@ async def generate_json_report(
     output_path.mkdir(exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"idea_report_{run_id}_{timestamp}.json"
+    filename = f"signal_report_{run_id}_{timestamp}.json"
     report_path = output_path / filename
 
     report_path.write_text(json.dumps(report, indent=2, default=str))

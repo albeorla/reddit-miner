@@ -11,7 +11,7 @@ from typing import List, Tuple
 from rapidfuzz import fuzz
 
 from .logging_config import get_logger
-from .models import IdeaExtraction
+from .models import PainSignal
 
 logger = get_logger(__name__)
 
@@ -33,11 +33,11 @@ def similarity_ratio(a: str, b: str) -> float:
     return fuzz.token_set_ratio(a.lower(), b.lower()) / 100.0
 
 
-def combined_similarity(ext1: IdeaExtraction, ext2: IdeaExtraction) -> float:
+def combined_similarity(ext1: PainSignal, ext2: PainSignal) -> float:
     """Calculate combined similarity across multiple fields.
 
     Uses weighted average of:
-    - idea_summary (50%)
+    - signal_summary (50%)
     - pain_point (25%)
     - target_user (25%)
 
@@ -48,7 +48,7 @@ def combined_similarity(ext1: IdeaExtraction, ext2: IdeaExtraction) -> float:
     Returns:
         Combined similarity score between 0.0 and 1.0
     """
-    summary_sim = similarity_ratio(ext1.idea_summary, ext2.idea_summary)
+    summary_sim = similarity_ratio(ext1.signal_summary, ext2.signal_summary)
     pain_sim = similarity_ratio(ext1.pain_point, ext2.pain_point) if ext1.pain_point and ext2.pain_point else 0.0
     user_sim = similarity_ratio(ext1.target_user, ext2.target_user) if ext1.target_user and ext2.target_user else 0.0
 
@@ -57,9 +57,9 @@ def combined_similarity(ext1: IdeaExtraction, ext2: IdeaExtraction) -> float:
 
 
 def dedupe_ideas(
-    ideas: List[Tuple[str, IdeaExtraction]],  # List of (post_id, extraction) tuples
+    ideas: List[Tuple[str, PainSignal]],  # List of (post_id, extraction) tuples
     similarity_threshold: float = 0.75,
-) -> List[Tuple[str, IdeaExtraction, List[str]]]:
+) -> List[Tuple[str, PainSignal, List[str]]]:
     """Deduplicate ideas based on text similarity using rapidfuzz.
 
     Groups similar ideas together, keeping the first occurrence as canonical.
@@ -78,14 +78,14 @@ def dedupe_ideas(
 
     # Track which ideas have been assigned to a cluster
     assigned = set()
-    clusters: List[Tuple[str, IdeaExtraction, List[str]]] = []
+    clusters: List[Tuple[str, PainSignal, List[str]]] = []
 
     for i, (post_id, extraction) in enumerate(ideas):
         if post_id in assigned:
             continue
 
         # Skip not_extractable ideas (no meaningful content to dedupe)
-        if extraction.idea_summary.lower().startswith("no viable"):
+        if extraction.signal_summary.lower().startswith("no viable"):
             assigned.add(post_id)
             clusters.append((post_id, extraction, []))
             continue
@@ -100,7 +100,7 @@ def dedupe_ideas(
                 continue
 
             # Skip not_extractable ideas
-            if other_extraction.idea_summary.lower().startswith("no viable"):
+            if other_extraction.signal_summary.lower().startswith("no viable"):
                 continue
 
             # Use combined similarity across multiple fields

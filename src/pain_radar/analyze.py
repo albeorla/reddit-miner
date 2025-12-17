@@ -77,7 +77,7 @@ async def analyze_post(llm: BaseChatModel, post: RedditPost) -> FullAnalysis:
             logger.info(
                 "post_analyzed",
                 post_id=post.id,
-                idea=result.extraction.idea_summary[:80],
+                signal=result.extraction.signal_summary[:80],
                 total=result.score.total,
                 confidence=result.score.confidence,
                 evidence_strength=result.extraction.evidence_strength,
@@ -87,7 +87,7 @@ async def analyze_post(llm: BaseChatModel, post: RedditPost) -> FullAnalysis:
             logger.info(
                 "post_analyzed",
                 post_id=post.id,
-                idea=result.extraction.idea_summary[:80],
+                signal=result.extraction.signal_summary[:80],
                 total=result.score.total if result.score else 0,
                 disqualified=True,
                 reason=result.extraction.risk_flags[0] if result.extraction.risk_flags else "unknown",

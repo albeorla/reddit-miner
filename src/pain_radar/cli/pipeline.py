@@ -57,7 +57,7 @@ def run(
         help="Disable progress bars (useful for logging).",
     ),
 ):
-    """Run the full idea mining pipeline.
+    """Run the full pain signal pipeline.
 
     Fetches posts from Reddit, analyzes them with AI, and stores the results.
     """
@@ -124,7 +124,7 @@ def run(
     console.print(f"\n[green]✓ Pipeline complete[/green] (Run #{result.run_id})")
     console.print(f"  Posts fetched: {result.posts_fetched}")
     console.print(f"  Posts analyzed: {result.posts_analyzed}")
-    console.print(f"  Ideas saved: {result.ideas_saved}")
+    console.print(f"  Signals saved: {result.ideas_saved}")
     console.print(f"  Qualified: {result.qualified_ideas}")
     console.print(f"  Errors: {result.errors}")
 
@@ -135,8 +135,8 @@ def run(
         table.add_column("Idea", width=50)
         table.add_column("Subreddit", width=15)
 
-        for idea in result.top_ideas[:5]:
-            summary = idea.get("idea_summary", "")
+        for sig in result.top_ideas[:5]:
+            summary = idea.get("signal_summary", "")
             table.add_row(
                 str(idea.get("total_score", "-")),
                 (summary[:47] + "...") if len(summary) > 50 else summary,

@@ -61,7 +61,7 @@ def cluster(
         console.print(f"[green]✓ Generated {len(clusters)} pain clusters:[/green]\n")
         
         for i, c in enumerate(clusters, 1):
-            console.print(f"{i}. [bold]{c.title}[/bold] ({len(c.idea_ids)} signals)")
+            console.print(f"{i}. [bold]{c.title}[/bold] ({len(c.signal_ids)} signals)")
             console.print(f"   {c.summary}")
             console.print(f"   Who: {c.target_audience}")
             console.print(f"   Why: {c.why_it_matters}\n")
