@@ -11,6 +11,7 @@ from . import app, console
 from ..config import get_settings
 from ..logging_config import configure_logging
 from ..pipeline import run_fetch_only
+from ..store import AsyncStore
 
 
 @app.command()
@@ -19,7 +20,13 @@ def fetch(
         None,
         "--subreddit",
         "-s",
-        help="Subreddits to fetch (can specify multiple).",
+        help="Subreddits to fetch (can specify multiple). Overrides source sets.",
+    ),
+    source_set: Optional[int] = typer.Option(
+        None,
+        "--source-set",
+        "-S",
+        help="Source set ID to fetch from.",
     ),
     limit: Optional[int] = typer.Option(
         None,
@@ -32,10 +39,15 @@ def fetch(
         "--log-level",
         help="Logging level.",
     ),
+    db_path: Optional[str] = typer.Option(
+        None,
+        "--db",
+        help="Path to database file.",
+    ),
 ):
     """Fetch posts from Reddit without AI processing.
 
-    Useful for building up a corpus before running AI analysis.
+    Uses source sets by default. Add source sets with: pain-radar sources-add <preset>
     """
     configure_logging(log_level, False)
 
@@ -45,16 +57,68 @@ def fetch(
         console.print(f"[red]Configuration error:[/red] {e}")
         raise typer.Exit(1)
 
-    # Apply overrides
-    if subreddits:
-        settings.subreddits = list(subreddits)
-    if limit:
-        settings.posts_per_subreddit = limit
+    path = db_path or settings.db_path
+    fetch_subreddits = []
+    fetch_limit = limit or settings.posts_per_subreddit
 
-    console.print(f"\nFetching posts from {len(settings.subreddits)} subreddits...")
+    # Determine subreddits to fetch
+    if subreddits:
+        # Explicit subreddits override everything
+        fetch_subreddits = list(subreddits)
+    elif source_set:
+        # Fetch from specific source set
+        async def _get_source_set():
+            store = AsyncStore(path)
+            await store.connect()
+            ss = await store.get_source_set(source_set)
+            await store.close()
+            return ss
+
+        ss = asyncio.run(_get_source_set())
+        if not ss:
+            console.print(f"[red]Source set {source_set} not found[/red]")
+            raise typer.Exit(1)
+        fetch_subreddits = ss["subreddits"]
+        fetch_limit = limit or ss.get("limit_per_sub", settings.posts_per_subreddit)
+        console.print(f"Using source set: [bold]{ss['name']}[/bold]")
+    else:
+        # Fetch from all active source sets
+        async def _get_all_subreddits():
+            store = AsyncStore(path)
+            await store.connect()
+            subs = await store.get_all_active_subreddits()
+            await store.close()
+            return subs
+
+        fetch_subreddits = asyncio.run(_get_all_subreddits())
+
+        if not fetch_subreddits:
+            console.print("[yellow]No active source sets found.[/yellow]")
+            console.print("Add one with: [cyan]pain-radar sources-add indie_saas[/cyan]")
+            raise typer.Exit(1)
+
+    console.print(f"\nFetching posts from {len(fetch_subreddits)} subreddits...")
+    console.print(f"  Subreddits: {', '.join(fetch_subreddits[:5])}", end="")
+    if len(fetch_subreddits) > 5:
+        console.print(f" (+{len(fetch_subreddits) - 5} more)")
+    else:
+        console.print()
+
+    # Create a minimal settings-like object for the pipeline
+    class FetchSettings:
+        def __init__(self):
+            self.subreddits = fetch_subreddits
+            self.listing = settings.listing
+            self.posts_per_subreddit = fetch_limit
+            self.top_comments = settings.top_comments
+            self.max_concurrency = settings.max_concurrency
+            self.db_path = path
+            self.user_agent = settings.user_agent
+
+    fetch_settings = FetchSettings()
 
     try:
-        result = asyncio.run(run_fetch_only(settings))
+        result = asyncio.run(run_fetch_only(fetch_settings))
         console.print(f"[green]✓ Fetched {result} posts[/green]")
     except Exception as e:
         console.print(f"[red]Fetch failed:[/red] {e}")

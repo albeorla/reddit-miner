@@ -44,9 +44,6 @@ Edit `.env` with your OpenAI API key:
 # OpenAI API key (required)
 OPENAI_API_KEY=sk-your-api-key
 
-# Subreddits to track (JSON array)
-PAIN_RADAR_SUBREDDITS=["SideProject", "IndieHackers", "SaaS"]
-
 # OpenAI model
 PAIN_RADAR_OPENAI_MODEL=gpt-4o
 ```
@@ -59,19 +56,33 @@ PAIN_RADAR_OPENAI_MODEL=gpt-4o
 pain-radar init-db
 ```
 
-### 2. Fetch Reddit Posts
+### 2. Choose Your ICP (Source Set)
 
 ```bash
-pain-radar fetch -s SideProject -l 25
+# See available presets
+pain-radar sources
+
+# Add a preset that matches your target audience
+pain-radar sources-add indie_saas    # Indie SaaS builders
+pain-radar sources-add shopify       # Shopify merchants
+pain-radar sources-add marketing     # Marketing operators
 ```
 
-### 3. Analyze Posts for Pain Signals
+### 3. Fetch Reddit Posts
 
 ```bash
-pain-radar run -s SideProject -p 20
+pain-radar fetch                     # Fetches from all active source sets
+pain-radar fetch --source-set 1      # Fetch from specific source set
+pain-radar fetch -s SideProject -l 5 # Override with specific subreddits
 ```
 
-### 4. Generate Weekly Digest
+### 4. Analyze Posts for Pain Signals
+
+```bash
+pain-radar run -p 20                 # Analyze up to 20 posts
+```
+
+### 5. Generate Weekly Digest
 
 ```bash
 pain-radar digest SideProject --top 7

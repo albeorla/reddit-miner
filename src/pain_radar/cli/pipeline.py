@@ -14,6 +14,7 @@ from ..config import get_settings
 from ..logging_config import configure_logging, get_logger
 from ..pipeline import run_pipeline, run_process_only
 from ..progress import create_progress, set_progress
+from ..store import AsyncStore
 
 
 @app.command()
@@ -22,7 +23,13 @@ def run(
         None,
         "--subreddit",
         "-s",
-        help="Subreddits to mine (can specify multiple). Overrides config.",
+        help="Subreddits to mine (can specify multiple). Overrides source sets.",
+    ),
+    source_set: Optional[int] = typer.Option(
+        None,
+        "--source-set",
+        "-S",
+        help="Source set ID to use.",
     ),
     limit: Optional[int] = typer.Option(
         None,
@@ -56,10 +63,15 @@ def run(
         "--no-progress",
         help="Disable progress bars (useful for logging).",
     ),
+    db_path: Optional[str] = typer.Option(
+        None,
+        "--db",
+        help="Path to database file.",
+    ),
 ):
     """Run the full pain signal pipeline.
 
-    Fetches posts from Reddit, analyzes them with AI, and stores the results.
+    Uses source sets by default. Add source sets with: pain-radar sources-add <preset>
     """
     configure_logging(log_level, log_json)
     logger = get_logger(__name__)
@@ -72,11 +84,45 @@ def run(
         console.print("  OPENAI_API_KEY=sk-...")
         raise typer.Exit(1)
 
-    # Apply CLI overrides
+    path = db_path or settings.db_path
+    run_subreddits = []
+    fetch_limit = limit or settings.posts_per_subreddit
+
+    # Determine subreddits to use
     if subreddits:
-        settings.subreddits = list(subreddits)
-    if limit:
-        settings.posts_per_subreddit = limit
+        # Explicit subreddits override everything
+        run_subreddits = list(subreddits)
+    elif source_set:
+        # Use specific source set
+        async def _get_source_set():
+            store = AsyncStore(path)
+            await store.connect()
+            ss = await store.get_source_set(source_set)
+            await store.close()
+            return ss
+
+        ss = asyncio.run(_get_source_set())
+        if not ss:
+            console.print(f"[red]Source set {source_set} not found[/red]")
+            raise typer.Exit(1)
+        run_subreddits = ss["subreddits"]
+        fetch_limit = limit or ss.get("limit_per_sub", settings.posts_per_subreddit)
+        console.print(f"Using source set: [bold]{ss['name']}[/bold]")
+    else:
+        # Use all active source sets
+        async def _get_all_subreddits():
+            store = AsyncStore(path)
+            await store.connect()
+            subs = await store.get_all_active_subreddits()
+            await store.close()
+            return subs
+
+        run_subreddits = asyncio.run(_get_all_subreddits())
+
+        if not run_subreddits:
+            console.print("[yellow]No active source sets found.[/yellow]")
+            console.print("Add one with: [cyan]pain-radar sources-add indie_saas[/cyan]")
+            raise typer.Exit(1)
 
     # Create LLM
     if not settings.openai_api_key:
@@ -89,17 +135,36 @@ def run(
         temperature=0,
     )
 
-    console.print(f"\n[bold]Pain Radar[/bold] - Scanning {len(settings.subreddits)} subreddits")
-    console.print(f"  Subreddits: {', '.join(settings.subreddits)}")
-    console.print(f"  Posts per subreddit: {settings.posts_per_subreddit}")
+    console.print(f"\n[bold]Pain Radar[/bold] - Scanning {len(run_subreddits)} subreddits")
+    console.print(f"  Subreddits: {', '.join(run_subreddits[:5])}", end="")
+    if len(run_subreddits) > 5:
+        console.print(f" (+{len(run_subreddits) - 5} more)")
+    else:
+        console.print()
+    console.print(f"  Posts per subreddit: {fetch_limit}")
     console.print(f"  Model: {settings.openai_model}")
     console.print()
 
+    # Create a settings-like object for the pipeline
+    class RunSettings:
+        def __init__(self):
+            self.subreddits = run_subreddits
+            self.listing = settings.listing
+            self.posts_per_subreddit = fetch_limit
+            self.top_comments = settings.top_comments
+            self.max_concurrency = settings.max_concurrency
+            self.db_path = path
+            self.user_agent = settings.user_agent
+            self.openai_api_key = settings.openai_api_key
+            self.openai_model = settings.openai_model
+
+    run_settings = RunSettings()
+
     async def _run():
         if skip_fetch:
-            return await run_process_only(settings, llm, process_limit)
+            return await run_process_only(run_settings, llm, process_limit)
         else:
-            return await run_pipeline(settings, llm, fetch_new=True, process_limit=process_limit)
+            return await run_pipeline(run_settings, llm, fetch_new=True, process_limit=process_limit)
 
     try:
         # Use progress bars unless disabled or logging JSON
@@ -124,22 +189,22 @@ def run(
     console.print(f"\n[green]✓ Pipeline complete[/green] (Run #{result.run_id})")
     console.print(f"  Posts fetched: {result.posts_fetched}")
     console.print(f"  Posts analyzed: {result.posts_analyzed}")
-    console.print(f"  Signals saved: {result.ideas_saved}")
-    console.print(f"  Qualified: {result.qualified_ideas}")
+    console.print(f"  Signals saved: {result.signals_saved}")
+    console.print(f"  Qualified: {result.qualified_signals}")
     console.print(f"  Errors: {result.errors}")
 
-    if result.top_ideas:
-        console.print("\n[bold]Top Ideas:[/bold]")
+    if result.top_signals:
+        console.print("\n[bold]Top Signals:[/bold]")
         table = Table(show_header=True, header_style="bold")
         table.add_column("Score", width=6)
-        table.add_column("Idea", width=50)
+        table.add_column("Signal", width=50)
         table.add_column("Subreddit", width=15)
 
-        for sig in result.top_ideas[:5]:
-            summary = idea.get("signal_summary", "")
+        for sig in result.top_signals[:5]:
+            summary = sig.get("signal_summary", "")
             table.add_row(
-                str(idea.get("total_score", "-")),
+                str(sig.get("total_score", "-")),
                 (summary[:47] + "...") if len(summary) > 50 else summary,
-                idea.get("subreddit", ""),
+                sig.get("subreddit", ""),
             )
         console.print(table)

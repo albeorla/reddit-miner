@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-import json
-from typing import List, Union
-
-from pydantic import AliasChoices, Field, field_validator
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Application settings loaded from environment variables."""
+    """Application settings loaded from environment variables.
+    
+    Note: Subreddit configuration has moved to Source Sets.
+    Use `pain-radar sources-add <preset>` to configure sources.
+    """
 
     model_config = SettingsConfigDict(
         env_prefix="PAIN_RADAR_",
@@ -19,49 +20,19 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # Subreddits to mine
-    subreddits: List[str] = Field(
-        default_factory=lambda: [
-            "IndieHackers",
-            "SideProject",
-            "MicroSaaS",
-            "SaaS",
-            "Startups",
-            "Entrepreneur",
-            "SmallBusiness",
-        ],
-        description="List of subreddits to track for pain signals",
-    )
-
-    @field_validator("subreddits", mode="before")
-    @classmethod
-    def parse_subreddits(cls, v: Union[str, List[str]]) -> List[str]:
-        """Parse subreddits from JSON string or list."""
-        if isinstance(v, str):
-            # Remove any newlines and extra whitespace for multiline JSON
-            v = v.replace("\n", "").replace("  ", "")
-            try:
-                parsed = json.loads(v)
-                if isinstance(parsed, list):
-                    return parsed
-            except json.JSONDecodeError:
-                # Try comma-separated
-                return [s.strip() for s in v.split(",") if s.strip()]
-        return v
-
-    # Reddit fetching parameters
+    # Reddit fetching parameters (defaults for source sets)
     listing: str = Field(
-        default="hot",
-        description="Reddit listing type: hot, new, top, rising",
+        default="new",
+        description="Default Reddit listing type: hot, new, top, rising",
     )
     posts_per_subreddit: int = Field(
-        default=50,
+        default=25,
         ge=1,
         le=100,
-        description="Number of posts to fetch per subreddit",
+        description="Default posts to fetch per subreddit",
     )
     top_comments: int = Field(
-        default=20,
+        default=15,
         ge=0,
         le=100,
         description="Number of top comments to fetch per post",
@@ -112,5 +83,6 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Load and return application settings."""
     return Settings()
+
 
 settings = get_settings()
