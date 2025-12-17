@@ -1,4 +1,4 @@
-"""Typer CLI for Idea Miner.
+"""Typer CLI for Pain Radar.
 
 This module re-exports from the cli subpackage for backward compatibility.
 The actual commands are defined in cli/*.py

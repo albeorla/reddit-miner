@@ -1,4 +1,4 @@
-"""Database schema for Idea Miner."""
+"""Database schema for Pain Radar."""
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS posts (
@@ -105,4 +105,59 @@ CREATE INDEX IF NOT EXISTS idx_ideas_extraction_state ON ideas(extraction_state)
 
 -- Prevent duplicate ideas for the same post in the same run
 CREATE UNIQUE INDEX IF NOT EXISTS idx_ideas_post_run_unique ON ideas(post_id, run_id);
+
+CREATE TABLE IF NOT EXISTS clusters (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    week_start TEXT NOT NULL,  -- ISO date YYYY-MM-DD for the week
+    target_audience TEXT,
+    why_it_matters TEXT,
+    created_at TEXT NOT NULL,
+    generated_report TEXT  -- Full Markdown output
+);
+
+CREATE TABLE IF NOT EXISTS alerts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    keyword TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    is_active INTEGER DEFAULT 1,
+    last_sent_at TEXT
+);
+
+-- Enhanced watchlists for Pain Radar alerting
+CREATE TABLE IF NOT EXISTS watchlists (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    keywords TEXT NOT NULL,  -- JSON array of keywords to match
+    subreddits TEXT,  -- JSON array (null = all tracked subreddits)
+    notification_email TEXT,
+    notification_webhook TEXT,
+    tier TEXT DEFAULT 'free',  -- free, paid
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT NOT NULL,
+    updated_at TEXT,
+    last_checked_at TEXT,
+    total_matches INTEGER DEFAULT 0
+);
+
+-- Track which signals matched which watchlists
+CREATE TABLE IF NOT EXISTS alert_matches (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    watchlist_id INTEGER NOT NULL,
+    idea_id INTEGER NOT NULL,
+    keyword_matched TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    notified INTEGER DEFAULT 0,
+    notified_at TEXT,
+    FOREIGN KEY (watchlist_id) REFERENCES watchlists(id),
+    FOREIGN KEY (idea_id) REFERENCES ideas(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_clusters_week ON clusters(week_start);
+CREATE INDEX IF NOT EXISTS idx_alerts_email ON alerts(email);
+CREATE INDEX IF NOT EXISTS idx_watchlists_active ON watchlists(is_active);
+CREATE INDEX IF NOT EXISTS idx_alert_matches_watchlist ON alert_matches(watchlist_id);
+CREATE INDEX IF NOT EXISTS idx_alert_matches_notified ON alert_matches(notified);
 """

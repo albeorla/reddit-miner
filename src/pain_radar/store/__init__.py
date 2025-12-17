@@ -1,4 +1,4 @@
-"""Store subpackage for Idea Miner.
+"""Store subpackage for Pain Radar.
 
 Re-exports AsyncStore for backward compatibility.
 """

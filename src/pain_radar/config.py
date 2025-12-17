@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     model_config = SettingsConfigDict(
-        env_prefix="IDEA_MINER_",
+        env_prefix="PAIN_RADAR_",
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
@@ -30,7 +30,7 @@ class Settings(BaseSettings):
             "Entrepreneur",
             "SmallBusiness",
         ],
-        description="List of subreddits to mine for ideas",
+        description="List of subreddits to track for pain signals",
     )
 
     @field_validator("subreddits", mode="before")
@@ -77,19 +77,19 @@ class Settings(BaseSettings):
 
     # Storage
     db_path: str = Field(
-        default="idea_miner.sqlite3",
+        default="pain_radar.sqlite3",
         description="Path to SQLite database file",
     )
 
     # OpenAI configuration
     openai_api_key: str = Field(
         default="",
-        validation_alias=AliasChoices("OPENAI_API_KEY", "IDEA_MINER_OPENAI_API_KEY"),
-        description="OpenAI API key (accepts OPENAI_API_KEY or IDEA_MINER_OPENAI_API_KEY)",
+        validation_alias=AliasChoices("OPENAI_API_KEY", "PAIN_RADAR_OPENAI_API_KEY"),
+        description="OpenAI API key (accepts OPENAI_API_KEY or PAIN_RADAR_OPENAI_API_KEY)",
     )
     openai_model: str = Field(
         default="gpt-4o",
-        description="OpenAI model to use for extraction and scoring",
+        description="OpenAI model to use for pain signal analysis",
     )
 
     # Logging
@@ -112,3 +112,5 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Load and return application settings."""
     return Settings()
+
+settings = get_settings()

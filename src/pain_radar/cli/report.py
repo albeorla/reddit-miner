@@ -131,4 +131,4 @@ def runs(
         )
 
     console.print(table)
-    console.print("\nGenerate a report with: idea-miner report --run <ID>")
+    console.print("\nGenerate a report with: pain-radar report --run <ID>")

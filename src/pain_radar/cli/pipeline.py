@@ -89,7 +89,7 @@ def run(
         temperature=0,
     )
 
-    console.print(f"\n[bold]Idea Miner[/bold] - Mining {len(settings.subreddits)} subreddits")
+    console.print(f"\n[bold]Pain Radar[/bold] - Scanning {len(settings.subreddits)} subreddits")
     console.print(f"  Subreddits: {', '.join(settings.subreddits)}")
     console.print(f"  Posts per subreddit: {settings.posts_per_subreddit}")
     console.print(f"  Model: {settings.openai_model}")

@@ -11,6 +11,7 @@ import aiosqlite
 
 from ..logging_config import get_logger
 from ..reddit_async import RedditPost
+from ..models import Cluster, ClusterItem, EvidenceSignal
 from .schema import SCHEMA
 
 logger = get_logger(__name__)
@@ -486,3 +487,334 @@ class AsyncStore:
             )
             row = await cursor.fetchone()
         return dict(row) if row else None
+
+    async def get_unclustered_pain_points(
+        self, subreddit: Optional[str] = None, days: int = 7
+    ) -> List[ClusterItem]:
+        """Get extraction items available for clustering.
+        
+        Args:
+            subreddit: Filter by subreddit
+            days: Look back days
+            
+        Returns:
+            List of ClusterItems
+        """
+        async with self.connection() as conn:
+            query = """
+                SELECT i.id, i.idea_summary, i.pain_point, i.evidence, 
+                       p.subreddit, p.url
+                FROM ideas i
+                JOIN posts p ON i.post_id = p.id
+                WHERE i.cluster_id IS NULL
+                AND i.disqualified = 0
+                AND datetime(i.created_at) > datetime('now', ?)
+            """
+            params = [f"-{days} days"]
+            
+            if subreddit:
+                query += " AND p.subreddit = ?"
+                params.append(subreddit)
+                
+            cursor = await conn.execute(query, params)
+            rows = await cursor.fetchall()
+            
+        items = []
+        for row in rows:
+            evidence_data = json.loads(row["evidence"] or "[]")
+            evidence = [EvidenceSignal(**e) for e in evidence_data]
+            
+            items.append(ClusterItem(
+                id=row["id"],
+                summary=row["idea_summary"],
+                pain_point=row["pain_point"],
+                subreddit=row["subreddit"],
+                url=row["url"],
+                evidence=evidence
+            ))
+            
+        return items
+
+    async def save_clusters(self, clusters: List[Cluster], week_start: str) -> None:
+        """Save generated clusters and link ideas.
+        
+        Args:
+            clusters: List of Cluster objects
+            week_start: ISO date string for the week
+        """
+        async with self.connection() as conn:
+            now = datetime.now(timezone.utc).isoformat()
+            
+            for cluster in clusters:
+                # Generate a simple ID if not present (handled by caller usually, but let's make one)
+                cluster_id = f"{week_start}_{cluster.title[:10].replace(' ', '_').lower()}_{len(cluster.idea_ids)}"
+                
+                # Insert cluster
+                await conn.execute(
+                    """
+                    INSERT INTO clusters (id, title, summary, week_start, target_audience, why_it_matters, generated_report, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        cluster_id,
+                        cluster.title,
+                        cluster.summary,
+                        week_start,
+                        cluster.target_audience,
+                        cluster.why_it_matters,
+                        "", # No report initially, generated later or on fly
+                        now
+                    )
+                )
+                
+                # Update ideas with cluster_id
+                for idea_id in cluster.idea_ids:
+                    await conn.execute(
+                        "UPDATE ideas SET cluster_id = ? WHERE id = ?",
+                        (cluster_id, idea_id)
+                    )
+            
+            await conn.commit()
+
+    # --- Watchlist / Alerting Methods ---
+
+    async def create_watchlist(
+        self,
+        name: str,
+        keywords: List[str],
+        subreddits: Optional[List[str]] = None,
+        notification_email: Optional[str] = None,
+        notification_webhook: Optional[str] = None,
+        tier: str = "free",
+    ) -> int:
+        """Create a new watchlist for keyword alerts.
+        
+        Args:
+            name: Name for the watchlist
+            keywords: List of keywords to track
+            subreddits: Optional list of subreddits to filter (None = all)
+            notification_email: Email for notifications
+            notification_webhook: Webhook URL for notifications
+            tier: Pricing tier (free/paid)
+            
+        Returns:
+            Watchlist ID
+        """
+        async with self.connection() as conn:
+            now = datetime.now(timezone.utc).isoformat()
+            cursor = await conn.execute(
+                """
+                INSERT INTO watchlists 
+                (name, keywords, subreddits, notification_email, notification_webhook, tier, is_active, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+                """,
+                (
+                    name,
+                    json.dumps(keywords),
+                    json.dumps(subreddits) if subreddits else None,
+                    notification_email,
+                    notification_webhook,
+                    tier,
+                    now,
+                ),
+            )
+            await conn.commit()
+            watchlist_id = cursor.lastrowid
+            logger.info("watchlist_created", id=watchlist_id, name=name, keywords=keywords)
+            return watchlist_id
+
+    async def get_watchlists(self, active_only: bool = True) -> List[dict]:
+        """Get all watchlists.
+        
+        Args:
+            active_only: Only return active watchlists
+            
+        Returns:
+            List of watchlist dictionaries
+        """
+        async with self.connection() as conn:
+            query = "SELECT * FROM watchlists"
+            if active_only:
+                query += " WHERE is_active = 1"
+            query += " ORDER BY created_at DESC"
+            
+            cursor = await conn.execute(query)
+            rows = await cursor.fetchall()
+            
+        watchlists = []
+        for row in rows:
+            wl = dict(row)
+            wl["keywords"] = json.loads(wl["keywords"])
+            wl["subreddits"] = json.loads(wl["subreddits"]) if wl["subreddits"] else None
+            watchlists.append(wl)
+        return watchlists
+
+    async def get_watchlist(self, watchlist_id: int) -> Optional[dict]:
+        """Get a specific watchlist by ID.
+        
+        Args:
+            watchlist_id: Watchlist ID
+            
+        Returns:
+            Watchlist dictionary or None
+        """
+        async with self.connection() as conn:
+            cursor = await conn.execute(
+                "SELECT * FROM watchlists WHERE id = ?", (watchlist_id,)
+            )
+            row = await cursor.fetchone()
+            
+        if not row:
+            return None
+        wl = dict(row)
+        wl["keywords"] = json.loads(wl["keywords"])
+        wl["subreddits"] = json.loads(wl["subreddits"]) if wl["subreddits"] else None
+        return wl
+
+    async def delete_watchlist(self, watchlist_id: int) -> bool:
+        """Delete (deactivate) a watchlist.
+        
+        Args:
+            watchlist_id: Watchlist ID
+            
+        Returns:
+            True if deleted
+        """
+        async with self.connection() as conn:
+            await conn.execute(
+                "UPDATE watchlists SET is_active = 0 WHERE id = ?",
+                (watchlist_id,)
+            )
+            await conn.commit()
+            logger.info("watchlist_deleted", id=watchlist_id)
+        return True
+
+    async def check_watchlists(self, since_hours: int = 24) -> List[dict]:
+        """Check all active watchlists against recent signals.
+        
+        Args:
+            since_hours: Only check signals from the last N hours
+            
+        Returns:
+            List of matches with watchlist and signal info
+        """
+        async with self.connection() as conn:
+            # Get all active watchlists
+            watchlists = await self.get_watchlists(active_only=True)
+            
+            if not watchlists:
+                return []
+            
+            # Get recent signals
+            cursor = await conn.execute(
+                """
+                SELECT i.id, i.idea_summary, i.pain_point, i.evidence,
+                       p.subreddit, p.url, p.title as post_title
+                FROM ideas i
+                JOIN posts p ON i.post_id = p.id
+                WHERE datetime(i.created_at) > datetime('now', ?)
+                AND i.disqualified = 0
+                """,
+                (f"-{since_hours} hours",)
+            )
+            signals = await cursor.fetchall()
+            
+        matches = []
+        now = datetime.now(timezone.utc).isoformat()
+        
+        for signal in signals:
+            signal_text = f"{signal['idea_summary']} {signal['pain_point']} {signal['post_title']}".lower()
+            
+            for wl in watchlists:
+                # Check subreddit filter
+                if wl["subreddits"] and signal["subreddit"] not in wl["subreddits"]:
+                    continue
+                
+                # Check keyword matches
+                for keyword in wl["keywords"]:
+                    if keyword.lower() in signal_text:
+                        matches.append({
+                            "watchlist_id": wl["id"],
+                            "watchlist_name": wl["name"],
+                            "idea_id": signal["id"],
+                            "keyword_matched": keyword,
+                            "signal_summary": signal["idea_summary"],
+                            "pain_point": signal["pain_point"],
+                            "subreddit": signal["subreddit"],
+                            "url": signal["url"],
+                        })
+                        break  # One match per signal per watchlist
+        
+        # Save matches to database
+        async with self.connection() as conn:
+            for match in matches:
+                # Check if already recorded
+                cursor = await conn.execute(
+                    "SELECT id FROM alert_matches WHERE watchlist_id = ? AND idea_id = ?",
+                    (match["watchlist_id"], match["idea_id"])
+                )
+                existing = await cursor.fetchone()
+                
+                if not existing:
+                    await conn.execute(
+                        """
+                        INSERT INTO alert_matches (watchlist_id, idea_id, keyword_matched, created_at)
+                        VALUES (?, ?, ?, ?)
+                        """,
+                        (match["watchlist_id"], match["idea_id"], match["keyword_matched"], now)
+                    )
+            
+            await conn.commit()
+        
+        logger.info("watchlists_checked", total_matches=len(matches))
+        return matches
+
+    async def get_unnotified_matches(self, watchlist_id: Optional[int] = None) -> List[dict]:
+        """Get alert matches that haven't been notified yet.
+        
+        Args:
+            watchlist_id: Optional filter by watchlist
+            
+        Returns:
+            List of unnotified matches
+        """
+        async with self.connection() as conn:
+            query = """
+                SELECT am.*, w.name as watchlist_name, w.notification_email, w.notification_webhook,
+                       i.idea_summary, i.pain_point, p.subreddit, p.url
+                FROM alert_matches am
+                JOIN watchlists w ON am.watchlist_id = w.id
+                JOIN ideas i ON am.idea_id = i.id
+                JOIN posts p ON i.post_id = p.id
+                WHERE am.notified = 0
+            """
+            params = []
+            if watchlist_id:
+                query += " AND am.watchlist_id = ?"
+                params.append(watchlist_id)
+            
+            query += " ORDER BY am.created_at DESC"
+            
+            cursor = await conn.execute(query, params)
+            rows = await cursor.fetchall()
+            
+        return [dict(row) for row in rows]
+
+    async def mark_matches_notified(self, match_ids: List[int]) -> None:
+        """Mark alert matches as notified.
+        
+        Args:
+            match_ids: List of match IDs to mark
+        """
+        if not match_ids:
+            return
+            
+        async with self.connection() as conn:
+            now = datetime.now(timezone.utc).isoformat()
+            placeholders = ",".join("?" * len(match_ids))
+            await conn.execute(
+                f"UPDATE alert_matches SET notified = 1, notified_at = ? WHERE id IN ({placeholders})",
+                [now] + match_ids
+            )
+            await conn.commit()
+

@@ -60,6 +60,13 @@ class ExtractionState(str, Enum):
     DISQUALIFIED = "disqualified"  # Idea extracted but fails rubric (scam, labor, etc.)
 
 
+class ExtractionType(str, Enum):
+    """Type of extraction (Solution Idea vs. Pure Pain)."""
+    
+    IDEA = "idea"  # A productizable solution concept
+    PAIN = "pain"  # A raw pain point with no clear solution yet
+
+
 class CompetitorNote(BaseModel):
     """A single competitor/alternative in the landscape."""
     
@@ -83,6 +90,11 @@ class IdeaExtraction(BaseModel):
     extraction_state: ExtractionState = Field(
         ...,
         description="Whether a viable idea was extracted"
+    )
+    
+    extraction_type: ExtractionType = Field(
+        default=ExtractionType.IDEA,
+        description="Type of extraction: 'idea' (has solution) or 'pain' (problem only)"
     )
     
     idea_summary: str = Field(
@@ -217,3 +229,33 @@ class FullAnalysis(BaseModel):
         default=None,
         description="Score is None if extraction_state != 'extracted'"
     )
+
+
+class ClusterItem(BaseModel):
+    """A minimal reference to an extracted pain/idea for clustering."""
+    
+    id: int
+    summary: str
+    pain_point: str
+    subreddit: str
+    url: str
+    evidence: List[EvidenceSignal]
+
+
+class Cluster(BaseModel):
+    """A grouped set of pain points (Pain Cluster)."""
+    
+    title: str = Field(..., description="Catchy title for the pain cluster")
+    summary: str = Field(..., description="1-sentence summary of the pattern")
+    target_audience: str = Field(..., description="Who is affected")
+    why_it_matters: str = Field(..., description="Why this is a good opportunity")
+    
+    # IDs of ideas in this cluster
+    idea_ids: List[int] = Field(..., description="List of idea IDs included in this cluster")
+    
+    # Selected quotes for the digest
+    quotes: List[str] = Field(..., description="2-3 best verbatim quotes illustrating the pain")
+    
+    # URLs for the digest
+    urls: List[str] = Field(..., description="URLs to the source threads")
+

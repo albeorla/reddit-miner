@@ -1,4 +1,4 @@
-"""CLI subpackage for Idea Miner.
+"""CLI subpackage for Pain Radar.
 
 Provides a modular CLI structure with commands organized by function.
 """
@@ -13,8 +13,8 @@ from ..logging_config import configure_logging, get_logger
 
 # Create main app
 app = typer.Typer(
-    name="idea-miner",
-    help="Mine Reddit for microSaaS and side-hustle ideas using AI.",
+    name="pain-radar",
+    help="Track Reddit pain points and generate weekly Pain Cluster digests.",
     no_args_is_help=True,
 )
 
@@ -26,7 +26,7 @@ def version_callback(value: bool):
     if value:
         from .. import __version__
 
-        console.print(f"idea-miner {__version__}")
+        console.print(f"pain-radar {__version__}")
         raise typer.Exit()
 
 
@@ -41,9 +41,9 @@ def main(
         help="Show version and exit.",
     ),
 ):
-    """Idea Miner - Mine Reddit for microSaaS ideas."""
+    """Pain Radar - Track recurring Reddit pain points and cluster them for insights."""
     pass
 
 
 # Import and register command modules
-from . import fetch, ideas, pipeline, report, db  # noqa: E402, F401
+from . import fetch, ideas, pipeline, report, db, cluster, web, alerts  # noqa: E402, F401

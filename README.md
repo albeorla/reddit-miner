@@ -1,28 +1,24 @@
-# Idea Miner 🔍
+# Pain Radar 🎯
 
-A modern async Python CLI for mining Reddit for microSaaS and side-hustle ideas using AI.
+**A signal tool that finds repeated pain points on Reddit and groups them into weekly "Pain Clusters" with quotes and links.**
 
-**No Reddit API keys required!** Uses RSS feeds and public JSON endpoints.
+No scraping private data. No auto-outreach. Cites sources. Filters self-promo.
 
-![CLI Demo](examples/demo.gif)
+## What It Does
 
-## Features
+Pain Radar tracks what Redditors are struggling with and groups similar frustrations into actionable clusters. Use it to:
 
-- **No API keys needed** - Uses Reddit RSS feeds + JSON endpoints
-- **Async Reddit ingestion** with `httpx`, connection pooling, and concurrency control  
-- **Robust retries** with exponential backoff, jitter, and 429/rate-limit handling
-- **LangChain structured outputs** for reliable idea extraction and scoring
-- **Evidence-based scoring** with source attribution and signal types
-- **SQLite storage** with async `aiosqlite`
-- **Typer CLI** with subcommands, help, and rich output
-- **Pydantic Settings** for type-safe configuration
-- **Modular architecture** with split CLI and store packages
+- **Generate weekly digests** of the top pain points in any subreddit
+- **Find patterns** across posts that point to the same unmet need
+- **Build credibility** by posting genuinely useful content
+- **Track signals** for specific topics or keywords
 
 ## Installation
 
 ```bash
 # Clone the repo
-cd reddit-miner
+git clone https://github.com/yourusername/pain-radar
+cd pain-radar
 
 # Create virtual environment
 python -m venv .venv
@@ -43,227 +39,240 @@ cp .env.example .env
 Edit `.env` with your OpenAI API key:
 
 ```bash
-# OpenAI API key (required for AI analysis)
+# OpenAI API key (required)
 OPENAI_API_KEY=sk-your-api-key
 
-# Subreddits to mine (JSON array)
-IDEA_MINER_SUBREDDITS=["Entrepreneur", "Startups", "SaaS", "SideProject"]
+# Subreddits to track (JSON array)
+PAIN_RADAR_SUBREDDITS=["SideProject", "IndieHackers", "SaaS"]
 
 # OpenAI model
-IDEA_MINER_OPENAI_MODEL=gpt-4o
+PAIN_RADAR_OPENAI_MODEL=gpt-4o
 ```
 
-## Usage
+## Quick Start
 
-### Initialize Database
+### 1. Initialize Database
 
 ```bash
-idea-miner init-db
+pain-radar init-db
 ```
 
-### Run Full Pipeline
-
-Fetch posts from Reddit and analyze with AI:
+### 2. Fetch Reddit Posts
 
 ```bash
-idea-miner run
+pain-radar fetch -s SideProject -l 25
+```
+
+### 3. Analyze Posts for Pain Signals
+
+```bash
+pain-radar run -s SideProject -p 20
+```
+
+### 4. Generate Weekly Digest
+
+```bash
+pain-radar digest SideProject --top 7
+```
+
+This outputs a Reddit-ready post with:
+- Top 7 pain clusters
+- Verbatim quotes from real users
+- Links to source threads
+- Soft opt-in CTA
+
+## Core Commands
+
+### `pain-radar fetch`
+
+Fetch posts from Reddit without processing (builds corpus, no API costs):
+
+```bash
+pain-radar fetch -s Entrepreneur -l 25
+```
+
+### `pain-radar run`
+
+Fetch and analyze posts for pain signals:
+
+```bash
+pain-radar run -s SideProject -s IndieHackers -l 20 -p 15
 ```
 
 Options:
-- `-s, --subreddit`: Override subreddits to mine (can specify multiple)
-- `-l, --limit`: Posts per subreddit (RSS limited to ~25)
-- `-p, --process-limit`: Max posts to process with AI
+- `-s, --subreddit`: Subreddits to track (can specify multiple)
+- `-l, --limit`: Posts per subreddit
+- `-p, --process-limit`: Max posts to analyze with AI
 - `--skip-fetch`: Only process existing unprocessed posts
-- `--log-level`: DEBUG, INFO, WARNING, ERROR
 
-Examples:
+### `pain-radar cluster`
 
-```bash
-# Mine specific subreddits
-idea-miner run -s Entrepreneur -s Startups -l 20
-
-# Process only 10 posts with AI
-idea-miner run -p 10
-
-# Process existing posts without fetching new ones
-idea-miner run --skip-fetch
-```
-
-### Fetch Only
-
-Fetch Reddit posts without AI processing (builds corpus, no API costs):
+Group pain signals into thematic clusters:
 
 ```bash
-idea-miner fetch -s Entrepreneur -l 25
+pain-radar cluster --days 7 -s SideProject
 ```
 
-### View Top Ideas
+### `pain-radar digest`
+
+Generate a weekly digest for a subreddit:
 
 ```bash
-idea-miner top -l 10
+# Reddit post format (default)
+pain-radar digest SideProject --top 7
+
+# Archive format with methodology
+pain-radar digest SideProject --format archive -o archive.md
+
+# Save to file
+pain-radar digest SideProject -o digest.md
 ```
 
-### Show Idea Details
+### `pain-radar reply-template`
+
+Generate helpful comment reply templates:
 
 ```bash
-idea-miner show 1
+pain-radar reply-template "Stripe Connect integration issues" --count 14 --approaches "webhooks,polling,third-party middleware"
 ```
 
-### Generate Reports
+## Alerting & Watchlists
+
+Create keyword watchlists to get notified when specific pain points are detected.
+
+### `pain-radar alerts-add`
+
+Create a new watchlist:
 
 ```bash
-# Markdown report
-idea-miner report --run 1
+# Track payment-related pain points
+pain-radar alerts-add "stripe, payment, checkout" --name "Payment Pain"
 
-# JSON report
-idea-miner report --run 1 --format json
+# Track specific subreddits only
+pain-radar alerts-add "onboarding, churn" -s "SaaS,IndieHackers" --name "Retention Issues"
+
+# With email notification (coming soon)
+pain-radar alerts-add "api, integration" -e "me@email.com"
 ```
 
-### View Run History
+### `pain-radar alerts`
+
+List all active watchlists:
 
 ```bash
-idea-miner runs
+pain-radar alerts
+pain-radar alerts --all  # Include inactive
 ```
 
-### Export Ideas
+### `pain-radar alerts-check`
+
+Check for new matches against your watchlists:
 
 ```bash
-# Export to JSON
-idea-miner export -o ideas.json
-
-# Export to CSV
-idea-miner export -o ideas.csv -l 100
+pain-radar alerts-check              # Last 24 hours
+pain-radar alerts-check --hours 48   # Last 48 hours
 ```
 
-### Database Stats
+### `pain-radar alerts-matches`
+
+View all matches:
 
 ```bash
-idea-miner stats
+pain-radar alerts-matches
+pain-radar alerts-matches 1  # Filter by watchlist ID
 ```
+
+### `pain-radar alerts-remove`
+
+Deactivate a watchlist:
+
+```bash
+pain-radar alerts-remove 1
+```
+
 
 ## How It Works
 
 1. **RSS Feeds**: Fetches posts from `https://reddit.com/r/{subreddit}/new.rss`
-2. **JSON Comments**: Scrapes comments from `https://reddit.com/r/.../comments/{id}/.json`
-3. **AI Analysis**: Uses LangChain + OpenAI to extract and score business ideas
-4. **Evidence Attribution**: Tracks which quotes came from posts vs comments
-5. **SQLite Storage**: Persists posts and scored ideas locally
+2. **JSON Comments**: Scrapes comments from public JSON endpoints
+3. **AI Analysis**: Uses GPT-4o to extract pain signals with quotes
+4. **Clustering**: Groups similar pain points into actionable clusters
+5. **Digest Generation**: Creates Reddit-ready posts with sources
 
-## Scoring Rubric
+## Methodology
 
-Ideas are scored 0-10 on five dimensions:
+Pain Radar is designed to be transparent and ethical:
 
-| Dimension | Description |
-|-----------|-------------|
-| **Practicality** | Build scope, dependencies, time-to-MVP |
-| **Profitability** | Pricing power, margins, buyer value |
-| **Distribution** | Ability to reach buyers, channel leverage |
-| **Competition** | Saturation (higher if less crowded) |
-| **Moat** | Data, workflow lock-in, switching costs |
+- **No private data**: Only public RSS/JSON endpoints
+- **Filters self-promo**: AI is instructed to skip promotional posts
+- **Cites sources**: Every quote links to the original thread
+- **No auto-outreach**: Only DM users who opt-in via "alerts" comments
+- **Open methodology**: We explain how signals are detected and clustered
 
-**Total Score**: 0-50 (sum of all dimensions)
+## Signal Types
 
-### Extraction States
+The AI extracts these types of evidence:
 
-- **extracted**: Valid idea identified and scored
-- **not_extractable**: No viable idea (meta post, question only, etc.)
-- **disqualified**: Idea exists but fails quality rules
+| Signal | Description |
+|--------|-------------|
+| `pain` | Expression of frustration or problem |
+| `willingness_to_pay` | Mentions of budget, price, payment |
+| `alternatives` | Existing solutions tried that failed |
+| `urgency` | Time pressure, deadlines |
+| `repetition` | Multiple people with same issue |
+| `budget` | Specific money amounts mentioned |
 
-### Evidence Signals
+## Weekly Digest Strategy
 
-Each piece of evidence is tagged with:
-- **source**: `post` or `comment`
-- **signal_type**: `pain`, `willingness_to_pay`, `alternatives`, `urgency`, `repetition`, `budget`
+Pain Radar supports the "earn trust first, then ask" approach:
+
+1. **Week 1-2**: Post weekly digests, comment helpfully
+2. **Week 3**: Add soft CTA: "I built a simple alert tool for this"
+3. **Week 4**: Ask for feedback: "What would make this worth $20/mo?"
+
+### Post Title Templates
+
+- "Top 7 problems people are repeatedly posting about in r/X this week (with links)"
+- "I tracked 200 posts and clustered the recurring pain points. Here are the patterns."
+- "This week's top pain points in r/X (with verbatim quotes)"
+
+### Comment Reply Template
+
+```
+I track these threads and this comes up a lot. I've seen 14+ similar posts recently.
+
+The pattern: [brief description]
+
+What people typically try: [approach 1], [approach 2], [approach 3]
+
+Similar threads if helpful:
+- [Thread 1](link)
+- [Thread 2](link)
+
+If you want the full cluster list or alerts when this topic pops up, reply 'alerts'.
+```
 
 ## Project Structure
 
 ```
-src/idea_miner/
+src/pain_radar/
 ├── cli/                 # CLI subcommands
 │   ├── __init__.py     # App setup + version
 │   ├── pipeline.py     # run command
 │   ├── fetch.py        # fetch command
+│   ├── cluster.py      # cluster + digest commands
 │   ├── ideas.py        # top, show, export
-│   ├── report.py       # report, runs
-│   └── db.py           # init-db, stats
+│   └── report.py       # report, runs
 ├── store/               # Storage layer
-│   ├── __init__.py
 │   ├── schema.py       # SQL schema
 │   └── core.py         # AsyncStore class
-├── http_client.py       # Centralized HTTP client
-├── retry_policy.py      # Retry decorators + 429 handling
+├── prompts.py           # LLM prompts (PainRadar personality)
+├── cluster.py           # Clustering logic
+├── digest.py            # Digest generation
 ├── reddit_async.py      # RSS + JSON scraping
 ├── models.py            # Pydantic models
-├── prompts.py           # LLM prompts
-├── analyze.py           # Combined extraction + scoring
-├── dedupe.py            # rapidfuzz deduplication
-├── pipeline.py          # Orchestration
-├── report.py            # Report generation
 └── config.py            # Pydantic Settings
 ```
-
-## Example Output
-
-See the [`examples/`](examples/) directory for full CLI logs and a sample report.
-
-### Sample Pipeline Run
-
-```
-$ idea-miner run -s SideProject -s IndieHackers -l 5 -p 15
-
-Idea Miner - Mining 2 subreddits
-  Subreddits: SideProject, IndieHackers
-  Posts per subreddit: 5
-  Model: gpt-4o
-
-✓ Pipeline complete (Run #1)
-  Posts fetched: 15
-  Posts analyzed: 15
-  Ideas saved: 15
-  Qualified: 3
-  Errors: 0
-
-Top Ideas:
-┏━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
-┃ Score  ┃ Idea                                               ┃ Subreddit       ┃
-┡━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
-│ 25     │ A privacy-first "WhatsApp Wrapped" analytics ap... │ SideProject     │
-│ 21     │ An event-driven onboarding tool that splits onb... │ IndieHackers    │
-│ 20     │ A configurable moderator bot that enforces cust... │ IndieHackers    │
-└────────┴────────────────────────────────────────────────────┴─────────────────┘
-```
-
-### Top Idea Details
-
-```
-$ idea-miner show 1
-
-Idea #1
-────────────────────────────────────────────────────────────────
-
-Summary: A privacy-first "WhatsApp Wrapped" analytics app
-
-Score: 25/50
-  Practicality:  6/10
-  Profitability: 3/10
-  Distribution:  5/10
-  Competition:   6/10
-  Moat:          5/10
-
-Target User: Consumer users who want insights into their WhatsApp usage
-Pain Point: Users want Spotify Wrapped-style analytics for WhatsApp
-Evidence Strength: 4/10
-
-Evidence:
-  • "WhatsApp Wrapped – every WhatsApp analytics tool..." (post)
-  • "People would love yearly chat stats" (comment)
-
-Validation Steps:
-  • Survey WhatsApp users on privacy concerns
-  • Build MVP with local-only processing
-```
-
-See [examples/sample_report.md](examples/sample_report.md) for a full analysis report.
 
 ## Rate Limiting
 
@@ -275,7 +284,7 @@ Reddit may rate-limit aggressive scraping. Built-in protections:
 - **429 handling**: Respects `Retry-After` header
 - **Tenacity retries**: Exponential backoff with jitter
 
-If you see 429 errors, reduce `IDEA_MINER_MAX_CONCURRENCY` in your `.env`.
+If you see 429 errors, reduce `PAIN_RADAR_MAX_CONCURRENCY` in your `.env`.
 
 ## Development
 
