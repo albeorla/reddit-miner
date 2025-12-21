@@ -8,7 +8,7 @@
 - [x] Task: Conductor - User Manual Verification 'Setup and Infrastructure' (Protocol in workflow.md)
 
 ## Phase 2: Testing Analysis Logic (`src/pain_radar/analyze.py`)
-- [ ] Task: Write tests for `extract_pain_signals`.
+- [x] Task: Write tests for `extract_pain_signals`. <!-- id: 0d5c1a4 -->
     - Mock LLM response.
     - Test positive cases (valid pain signals).
     - Test negative cases (no pain signals).
