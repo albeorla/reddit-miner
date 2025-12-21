@@ -21,7 +21,7 @@
 - [x] Task: Conductor - User Manual Verification 'Testing Analysis Logic' (Protocol in workflow.md)
 
 ## Phase 3: Testing Clustering Logic (`src/pain_radar/cluster.py`)
-- [ ] Task: Write tests for `cluster_signals`.
+- [x] Task: Write tests for `cluster_signals`. <!-- id: 99b6d01 -->
     - Mock LLM response for embedding/clustering.
     - Test clustering of identical/similar signals.
     - Test handling of distinct signals.
