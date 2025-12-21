@@ -18,7 +18,7 @@
 - [x] Task: Write tests for error handling. <!-- id: 088c6c3 -->
     - Test behavior when LLM API fails.
     - Test behavior with malformed input.
-- [ ] Task: Conductor - User Manual Verification 'Testing Analysis Logic' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Testing Analysis Logic' (Protocol in workflow.md)
 
 ## Phase 3: Testing Clustering Logic (`src/pain_radar/cluster.py`)
 - [ ] Task: Write tests for `cluster_signals`.
