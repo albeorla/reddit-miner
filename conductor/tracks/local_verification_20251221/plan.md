@@ -1,10 +1,10 @@
 # Track Plan: Comprehensive Local Verification and Coverage
 
-## Phase 1: Storage Layer Testing (`src/pain_radar/store/`)
+## Phase 1: Storage Layer Testing (`src/pain_radar/store/`) [checkpoint: be26e9f]
 - [x] Task: Write tests for database initialization and connectivity. <!-- id: 7be4c81 -->
 - [x] Task: Write tests for CRUD operations on Signal models. <!-- id: e07f82f -->
 - [x] Task: Write tests for CRUD operations on Source and SourceSet models. <!-- id: 6b50c16 -->
-- [~] Task: Conductor - User Manual Verification 'Storage Layer Testing' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Storage Layer Testing' (Protocol in workflow.md)
 
 ## Phase 2: Pipeline and CLI Testing (`src/pain_radar/pipeline.py` & `src/pain_radar/cli/`)
 - [ ] Task: Write unit tests for `pipeline.py` (mocking reddit and LLM).
