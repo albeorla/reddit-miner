@@ -289,11 +289,11 @@ class AsyncStore:
             query = """
                 SELECT i.*, p.title as post_title, p.subreddit, p.permalink
                 FROM signals i
-                JOIN posts p ON s.post_id = p.id
+                JOIN posts p ON i.post_id = p.id
             """
             if not include_disqualified:
-                query += " WHERE s.disqualified = 0"
-            query += " ORDER BY s.total_score DESC LIMIT ?"
+                query += " WHERE i.disqualified = 0"
+            query += " ORDER BY i.total_score DESC LIMIT ?"
 
             cursor = await conn.execute(query, (limit,))
             rows = await cursor.fetchall()
@@ -456,9 +456,9 @@ class AsyncStore:
                 SELECT i.*, p.title as post_title, p.subreddit, p.permalink,
                        p.body as post_body, p.top_comments
                 FROM signals i
-                JOIN posts p ON s.post_id = p.id
-                WHERE s.run_id = ?
-                ORDER BY s.total_score DESC
+                JOIN posts p ON i.post_id = p.id
+                WHERE i.run_id = ?
+                ORDER BY i.total_score DESC
                 """,
                 (run_id,),
             )
@@ -480,7 +480,7 @@ class AsyncStore:
                 SELECT i.*, p.title as post_title, p.subreddit, p.permalink,
                        p.body as post_body, p.top_comments, p.url as post_url
                 FROM signals i
-                JOIN posts p ON s.post_id = p.id
+                JOIN posts p ON i.post_id = p.id
                 WHERE i.id = ?
                 """,
                 (signal_id,),
@@ -505,9 +505,9 @@ class AsyncStore:
                 SELECT i.id, i.signal_summary, i.pain_point, i.evidence, 
                        p.subreddit, p.url
                 FROM signals i
-                JOIN posts p ON s.post_id = p.id
+                JOIN posts p ON i.post_id = p.id
                 WHERE i.cluster_id IS NULL
-                AND s.disqualified = 0
+                AND i.disqualified = 0
                 AND datetime(i.created_at) > datetime('now', ?)
             """
             params = [f"-{days} days"]
