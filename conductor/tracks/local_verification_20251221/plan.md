@@ -2,7 +2,7 @@
 
 ## Phase 1: Storage Layer Testing (`src/pain_radar/store/`)
 - [x] Task: Write tests for database initialization and connectivity. <!-- id: 7be4c81 -->
-- [ ] Task: Write tests for CRUD operations on Signal models.
+- [x] Task: Write tests for CRUD operations on Signal models. <!-- id: e07f82f -->
 - [ ] Task: Write tests for CRUD operations on Source and SourceSet models.
 - [ ] Task: Conductor - User Manual Verification 'Storage Layer Testing' (Protocol in workflow.md)
 
