@@ -25,7 +25,7 @@
     - Mock LLM response for embedding/clustering.
     - Test clustering of identical/similar signals.
     - Test handling of distinct signals.
-- [ ] Task: Write tests for cluster metadata generation.
+- [x] Task: Write tests for cluster metadata generation. <!-- id: c313489 -->
     - Verify cluster naming and summary generation.
 - [ ] Task: Conductor - User Manual Verification 'Testing Clustering Logic' (Protocol in workflow.md)
 
