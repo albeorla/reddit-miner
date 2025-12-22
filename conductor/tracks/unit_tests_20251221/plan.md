@@ -34,4 +34,4 @@
     - Execute `pytest --cov=src/pain_radar`.
     - Ensure coverage meets the 80% target.
 - [x] Task: Refactor code if necessary to improve testability or fix bugs discovered during testing. <!-- id: f11ae3d -->
-- [ ] Task: Conductor - User Manual Verification 'Review and Refine' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Review and Refine' (Protocol in workflow.md)
