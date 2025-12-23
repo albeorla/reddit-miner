@@ -2,7 +2,7 @@
 
 This plan outlines the refactoring of the Reddit pain point extraction pipeline into an agentic workflow using LangGraph.
 
-## Phase 1: Setup and Foundation
+## Phase 1: Setup and Foundation [checkpoint: 8a6fea5]
 - [x] Task: Install and Configure Dependencies (Add `langgraph` and `langchain-openai` to `pyproject.toml`) ae07405
 - [x] Task: Define Agent State and Models (Create `src/pain_radar/agent/models.py`) cde2c0c
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Setup and Foundation' (Protocol in workflow.md)
