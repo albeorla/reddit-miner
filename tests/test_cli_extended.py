@@ -101,3 +101,66 @@ def test_alerts_list(mock_settings):
         assert result.exit_code == 0
         assert "stripe" in result.stdout
         assert "My Watchlist" in result.stdout
+
+def test_alerts_add(mock_settings):
+    """Test alerts-add command."""
+    with patch("pain_radar.cli.alerts.AsyncStore") as mock_store_cls:
+        mock_store = mock_store_cls.return_value
+        mock_store.connect = AsyncMock()
+        mock_store.close = AsyncMock()
+        mock_store.create_watchlist = AsyncMock(return_value=123)
+        
+        result = runner.invoke(app, ["alerts-add", "stripe, payment", "--name", "Test Watch"])
+        assert result.exit_code == 0
+        assert "Created watchlist #123" in result.stdout
+        mock_store.create_watchlist.assert_called_once()
+
+def test_alerts_check(mock_settings):
+    """Test alerts-check command."""
+    with patch("pain_radar.cli.alerts.AsyncStore") as mock_store_cls:
+        mock_store = mock_store_cls.return_value
+        mock_store.connect = AsyncMock()
+        mock_store.close = AsyncMock()
+        mock_store.check_watchlists = AsyncMock(return_value=[{
+            "watchlist_name": "W1",
+            "keyword_matched": "k1",
+            "subreddit": "s1",
+            "signal_summary": "sum",
+            "url": "url"
+        }])
+        
+        result = runner.invoke(app, ["alerts-check"])
+        assert result.exit_code == 0
+        assert "Found 1 matches" in result.stdout
+
+def test_ideas_show(mock_settings):
+    """Test show signal command."""
+    with patch("pain_radar.cli.ideas.AsyncStore") as mock_store_cls:
+        mock_store = mock_store_cls.return_value
+        mock_store.connect = AsyncMock()
+        mock_store.close = AsyncMock()
+        mock_store.get_signal_detail = AsyncMock(return_value={
+            "id": 1,
+            "signal_summary": "Summary",
+            "subreddit": "test",
+            "total_score": 40
+        })
+        
+        result = runner.invoke(app, ["show", "1"])
+        assert result.exit_code == 0
+        assert "Signal #1" in result.stdout
+        assert "Summary" in result.stdout
+
+def test_ideas_export(mock_settings, tmp_path):
+    """Test export signals command."""
+    export_file = tmp_path / "export.json"
+    with patch("pain_radar.cli.ideas.AsyncStore") as mock_store_cls:
+        mock_store = mock_store_cls.return_value
+        mock_store.connect = AsyncMock()
+        mock_store.close = AsyncMock()
+        mock_store.get_top_signals = AsyncMock(return_value=[{"id": 1, "summary": "test"}])
+        
+        result = runner.invoke(app, ["export", "--output", str(export_file)])
+        assert result.exit_code == 0
+        assert "Exported 1 signals" in result.stdout
+        assert export_file.exists()
