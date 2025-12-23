@@ -56,7 +56,7 @@ def _generate_reddit_post(clusters: list[Cluster], subreddit: str) -> str:
 
         # Source links
         if cluster.urls:
-            links = ", ".join([f"[Thread {j+1}]({url})" for j, url in enumerate(cluster.urls[:3])])
+            links = ", ".join([f"[Thread {j + 1}]({url})" for j, url in enumerate(cluster.urls[:3])])
             md += f"**Sources:** {links}\n\n"
 
         md += "---\n\n"
@@ -96,7 +96,7 @@ def _generate_archive_page(clusters: list[Cluster], subreddit: str) -> str:
 
         md += "### Sources\n\n"
         for j, url in enumerate(cluster.urls):
-            md += f"- [Thread {j+1}]({url})\n"
+            md += f"- [Thread {j + 1}]({url})\n"
 
         md += "\n---\n\n"
 

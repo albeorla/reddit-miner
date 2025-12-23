@@ -1,8 +1,21 @@
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock
 from langchain_core.language_models import BaseChatModel
-from pain_radar.models import FullAnalysis, PainSignal, SignalScore, ExtractionState, Cluster, ClusterItem, EvidenceSignal, DistributionWedge, ExtractionType, CompetitorNote
+
+from pain_radar.models import (
+    ClusterItem,
+    CompetitorNote,
+    DistributionWedge,
+    EvidenceSignal,
+    ExtractionState,
+    ExtractionType,
+    FullAnalysis,
+    PainSignal,
+    SignalScore,
+)
 from pain_radar.reddit_async import RedditPost
+
 
 @pytest.fixture
 def mock_llm():
@@ -11,6 +24,7 @@ def mock_llm():
     llm.with_structured_output.return_value = llm  # Allow chaining
     llm.ainvoke = AsyncMock()
     return llm
+
 
 @pytest.fixture
 def sample_post():
@@ -25,8 +39,9 @@ def sample_post():
         score=10,
         num_comments=5,
         permalink="http://test.url/permalink",
-        top_comments=["Comment 1", "Comment 2"]
+        top_comments=["Comment 1", "Comment 2"],
     )
+
 
 @pytest.fixture
 def sample_full_analysis_extracted():
@@ -40,14 +55,8 @@ def sample_full_analysis_extracted():
             pain_point="Cannot find X",
             proposed_solution="Build X",
             evidence_strength=8,
-            evidence=[
-                EvidenceSignal(
-                    quote="I can't find X",
-                    source="post",
-                    signal_type="pain"
-                )
-            ],
-            risk_flags=[]
+            evidence=[EvidenceSignal(quote="I can't find X", source="post", signal_type="pain")],
+            risk_flags=[],
         ),
         score=SignalScore(
             disqualified=False,
@@ -59,11 +68,10 @@ def sample_full_analysis_extracted():
             confidence=0.9,
             distribution_wedge=DistributionWedge.SEO,
             distribution_wedge_detail="SEO for X",
-            competition_landscape=[
-                CompetitorNote(category="Existing Tools", your_wedge="Cheaper")
-            ]
-        )
+            competition_landscape=[CompetitorNote(category="Existing Tools", your_wedge="Cheaper")],
+        ),
     )
+
 
 @pytest.fixture
 def sample_cluster_item():
@@ -73,11 +81,5 @@ def sample_cluster_item():
         pain_point="Pain 1",
         subreddit="sub1",
         url="http://test.url/1",
-        evidence=[
-            EvidenceSignal(
-                quote="Quote 1",
-                signal_type="pain", 
-                source="post"
-            )
-        ]
+        evidence=[EvidenceSignal(quote="Quote 1", signal_type="pain", source="post")],
     )

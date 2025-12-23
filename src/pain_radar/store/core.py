@@ -72,8 +72,8 @@ class AsyncStore:
             for post in posts:
                 await conn.execute(
                     """
-                    INSERT OR REPLACE INTO posts 
-                    (id, subreddit, title, body, created_utc, score, 
+                    INSERT OR REPLACE INTO posts
+                    (id, subreddit, title, body, created_utc, score,
                      num_comments, url, permalink, top_comments, fetched_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
@@ -108,9 +108,9 @@ class AsyncStore:
         async with self.connection() as conn:
             cursor = await conn.execute(
                 """
-                SELECT * FROM posts 
-                WHERE processed = 0 
-                ORDER BY score DESC 
+                SELECT * FROM posts
+                WHERE processed = 0
+                ORDER BY score DESC
                 LIMIT ?
                 """,
                 (limit,),
@@ -222,7 +222,7 @@ class AsyncStore:
             cursor = await conn.execute(
                 """
                 INSERT INTO signals (
-                    post_id, run_id, cluster_id, 
+                    post_id, run_id, cluster_id,
                     extraction_state, not_extractable_reason,
                     signal_summary, target_user, pain_point,
                     proposed_solution, evidence, evidence_strength, evidence_strength_reason,
@@ -505,7 +505,7 @@ class AsyncStore:
         """
         async with self.connection() as conn:
             query = """
-                SELECT i.id, i.signal_summary, i.pain_point, i.evidence, 
+                SELECT i.id, i.signal_summary, i.pain_point, i.evidence,
                        p.subreddit, p.url
                 FROM signals i
                 JOIN posts p ON i.post_id = p.id
@@ -606,7 +606,7 @@ class AsyncStore:
             now = datetime.now(UTC).isoformat()
             cursor = await conn.execute(
                 """
-                INSERT INTO watchlists 
+                INSERT INTO watchlists
                 (name, keywords, subreddits, notification_email, notification_webhook, tier, is_active, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, 1, ?)
                 """,
@@ -708,9 +708,9 @@ class AsyncStore:
                 SELECT i.id, i.signal_summary, i.pain_point, i.evidence,
                        p.subreddit, p.url, p.title as post_title
                 FROM signals i
-                JOIN posts p ON s.post_id = p.id
+                JOIN posts p ON i.post_id = p.id
                 WHERE datetime(i.created_at) > datetime('now', ?)
-                AND s.disqualified = 0
+                AND i.disqualified = 0
                 """,
                 (f"-{since_hours} hours",),
             )
@@ -845,7 +845,7 @@ class AsyncStore:
             now = datetime.now(UTC).isoformat()
             cursor = await conn.execute(
                 """
-                INSERT INTO source_sets 
+                INSERT INTO source_sets
                 (name, description, preset_key, subreddits, listing, limit_per_sub, is_active, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, 1, ?)
                 """,

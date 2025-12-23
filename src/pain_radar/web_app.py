@@ -2,13 +2,13 @@
 
 from datetime import datetime
 
-from fastapi import FASTAPI, Form
+from fastapi import FastAPI, Form
 from fastapi.responses import HTMLResponse
 
 from .config import get_settings
 from .store import AsyncStore
 
-app = FASTAPI(title="Pain Radar Public Archive")
+app = FastAPI(title="Pain Radar Public Archive")
 settings = get_settings()
 
 # We might not have a templates dir, so let's use a simple HTML generator or inline templates
@@ -51,7 +51,7 @@ async def read_root():
         <div class="text-center">
             <h1 class="text-4xl font-bold mb-4">Public Pain Archive</h1>
             <p class="text-xl text-gray-600 mb-8">
-                I track recurring pain points in niche subreddits. 
+                I track recurring pain points in niche subreddits.
                 No scraping private data, no spam. Just clusters of public problems.
             </p>
             <div class="bg-white shadow overflow-hidden sm:rounded-lg p-6">
@@ -64,13 +64,13 @@ async def read_root():
                     </li>
                 </ul>
             </div>
-            
+
             <div class="mt-12">
                 <h3 class="text-lg font-medium text-gray-900">Get Alerts</h3>
                 <form action="/alerts" method="post" class="mt-4 flex justify-center">
-                    <input type="email" name="email" placeholder="you@example.com" required 
+                    <input type="email" name="email" placeholder="you@example.com" required
                            class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-64 sm:text-sm border-gray-300 rounded-md p-2 border mr-2">
-                    <input type="text" name="keyword" placeholder="keyword (e.g. 'stripe')" required 
+                    <input type="text" name="keyword" placeholder="keyword (e.g. 'stripe')" required
                            class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-48 sm:text-sm border-gray-300 rounded-md p-2 border mr-2">
                     <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Subscribe
@@ -133,11 +133,11 @@ async def read_latest_archive():
     for row in rows:
         clusters_html += f"""
         <div class="mb-12">
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">{row['title']}</h2>
-            <p class="text-lg text-gray-700 mb-4">{row['summary']}</p>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">{row["title"]}</h2>
+            <p class="text-lg text-gray-700 mb-4">{row["summary"]}</p>
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-                <p class="text-sm text-yellow-700"><strong>Why it matters:</strong> {row['why_it_matters']}</p>
-                <p class="text-sm text-yellow-700 mt-1"><strong>Target:</strong> {row['target_audience']}</p>
+                <p class="text-sm text-yellow-700"><strong>Why it matters:</strong> {row["why_it_matters"]}</p>
+                <p class="text-sm text-yellow-700 mt-1"><strong>Target:</strong> {row["target_audience"]}</p>
             </div>
         </div>
         <hr class="my-8 border-gray-200">
@@ -146,7 +146,7 @@ async def read_latest_archive():
     return HTML_BS.format(
         content=f"""
         <div class="prose prose-indigo mx-auto">
-            <h1 class="text-3xl font-bold mb-8">Latest Pain Clusters ({rows[0]['week_start']})</h1>
+            <h1 class="text-3xl font-bold mb-8">Latest Pain Clusters ({rows[0]["week_start"]})</h1>
             {clusters_html}
             <div class="mt-8 text-center bg-gray-100 p-6 rounded">
                 <p class="font-medium">Want to know when these change? <a href="/" class="text-indigo-600">Get alerts</a>.</p>
