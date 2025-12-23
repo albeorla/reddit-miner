@@ -169,3 +169,64 @@ async def test_async_store_source_set_crud():
     assert len(sets_active) == 0
     
     await store.close()
+
+@pytest.mark.asyncio
+async def test_run_crud():
+    """Test CRUD operations for Runs."""
+    db_path = ":memory:"
+    store = AsyncStore(db_path)
+    await store.init_db()
+    
+    # 1. Create Run
+    run_id = await store.create_run(["sub1", "sub2"])
+    assert run_id > 0
+    
+    # 2. Get Run
+    run = await store.get_run(run_id)
+    assert run["id"] == run_id
+    assert run["status"] == "running"
+    
+    # 3. Update Run
+    await store.update_run(run_id, posts_fetched=10, posts_analyzed=5, status="completed")
+    run_updated = await store.get_run(run_id)
+    assert run_updated["posts_fetched"] == 10
+    assert run_updated["status"] == "completed"
+    
+    # 4. Get Runs
+    runs = await store.get_runs(limit=10)
+    assert len(runs) == 1
+    
+    await store.close()
+
+@pytest.mark.asyncio
+async def test_watchlist_crud():
+    """Test CRUD operations for Watchlists."""
+    db_path = ":memory:"
+    store = AsyncStore(db_path)
+    await store.init_db()
+    
+    # 1. Create Watchlist
+    wl_id = await store.create_watchlist(
+        name="Test Watch",
+        keywords=["stripe", "billing"],
+        subreddits=["SaaS"],
+        notification_email="test@example.com"
+    )
+    assert wl_id > 0
+    
+    # 2. Get Watchlist
+    wl = await store.get_watchlist(wl_id)
+    assert wl["name"] == "Test Watch"
+    assert "stripe" in wl["keywords"]
+    
+    # 3. Get Watchlists
+    lists = await store.get_watchlists()
+    assert len(lists) == 1
+    
+    # 4. Delete (Deactivate)
+    await store.delete_watchlist(wl_id)
+    active_lists = await store.get_watchlists(active_only=True)
+    assert len(active_lists) == 0
+    
+    await store.close()
+
