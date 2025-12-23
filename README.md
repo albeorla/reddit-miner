@@ -324,3 +324,4 @@ pre-commit run --all-files
 ## License
 
 MIT
+\n<!-- CI verification -->
