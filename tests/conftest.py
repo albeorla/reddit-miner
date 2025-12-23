@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from langchain_core.language_models import BaseChatModel
+
 from pain_radar.models import (
     ClusterItem,
     CompetitorNote,

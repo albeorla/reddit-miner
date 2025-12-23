@@ -2,15 +2,20 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from pain_radar.pipeline import LLMAnalysisError, PipelineResult, process_post, run_fetch_only, run_pipeline
 
 
 @pytest.fixture(autouse=True)
 def mock_progress():
     """Mock progress bar utilities to avoid console output/errors in tests."""
-    with patch("pain_radar.pipeline.start_fetch_task"), patch("pain_radar.pipeline.complete_fetch"), patch(
-        "pain_radar.pipeline.start_analyze_task"
-    ), patch("pain_radar.pipeline.advance_analyze"), patch("pain_radar.pipeline.complete_analyze"):
+    with (
+        patch("pain_radar.pipeline.start_fetch_task"),
+        patch("pain_radar.pipeline.complete_fetch"),
+        patch("pain_radar.pipeline.start_analyze_task"),
+        patch("pain_radar.pipeline.advance_analyze"),
+        patch("pain_radar.pipeline.complete_analyze"),
+    ):
         yield
 
 
@@ -74,9 +79,10 @@ async def test_run_pipeline_fetch_new(mock_llm, sample_post, sample_full_analysi
 
     settings = MockRunSettings()
 
-    with patch("pain_radar.pipeline.fetch_all_subreddits", return_value=[sample_post]) as mock_fetch, patch(
-        "pain_radar.pipeline.analyze_post", return_value=sample_full_analysis_extracted
-    ) as mock_analyze:
+    with (
+        patch("pain_radar.pipeline.fetch_all_subreddits", return_value=[sample_post]) as mock_fetch,
+        patch("pain_radar.pipeline.analyze_post", return_value=sample_full_analysis_extracted) as mock_analyze,
+    ):
         with patch("pain_radar.pipeline.AsyncStore") as mock_store_cls:
             mock_store = mock_store_cls.return_value
             mock_store.connect = AsyncMock()

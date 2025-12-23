@@ -1,5 +1,6 @@
 import aiosqlite
 import pytest
+
 from pain_radar.models import (
     CompetitorNote,
     DistributionWedge,

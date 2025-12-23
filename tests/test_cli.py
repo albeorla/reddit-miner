@@ -1,7 +1,8 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pain_radar.cli import app
 from typer.testing import CliRunner
+
+from pain_radar.cli import app
 
 runner = CliRunner()
 
@@ -211,7 +212,7 @@ def test_help_all_commands():
 
     for cmd in commands:
         result = runner.invoke(app, [cmd, "--help"])
-        assert (
-            result.exit_code == 0
-        ), f"Command {cmd} --help failed with exit code {result.exit_code}. Output: {result.stdout}"
+        assert result.exit_code == 0, (
+            f"Command {cmd} --help failed with exit code {result.exit_code}. Output: {result.stdout}"
+        )
         assert "Usage" in result.stdout

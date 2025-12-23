@@ -1,17 +1,22 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pain_radar.cli import app
 from typer.testing import CliRunner
+
+from pain_radar.cli import app
 
 runner = CliRunner()
 
 
 @pytest.fixture
 def mock_settings():
-    with patch("pain_radar.cli.db.get_settings") as m1, patch("pain_radar.cli.report.get_settings") as m2, patch(
-        "pain_radar.cli.ideas.get_settings"
-    ) as m3, patch("pain_radar.cli.cluster.get_settings") as m4, patch("pain_radar.cli.alerts.get_settings") as m5:
+    with (
+        patch("pain_radar.cli.db.get_settings") as m1,
+        patch("pain_radar.cli.report.get_settings") as m2,
+        patch("pain_radar.cli.ideas.get_settings") as m3,
+        patch("pain_radar.cli.cluster.get_settings") as m4,
+        patch("pain_radar.cli.alerts.get_settings") as m5,
+    ):
         settings = MagicMock()
         settings.db_path = ":memory:"
         m1.return_value = settings

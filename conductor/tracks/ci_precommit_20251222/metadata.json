@@ -1,0 +1,8 @@
+{
+  "track_id": "ci_precommit_20251222",
+  "type": "chore",
+  "status": "new",
+  "created_at": "2025-12-22T12:00:00Z",
+  "updated_at": "2025-12-22T12:00:00Z",
+  "description": "setup a github actions pipeline that's lightweight but that confirms our linting, and test coverage, let's also make sure our README is clean and up to date with testing / coverage information. Let's implement precommit checks so that linting and test coverage isnt violated too"
+}

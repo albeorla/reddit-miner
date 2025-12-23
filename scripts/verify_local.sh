@@ -19,13 +19,13 @@ echo "3. Fetching Posts (Mocked/Limited)..."
 python -m pain_radar fetch --subreddit test --limit 1 --db $PAIN_RADAR_DB_PATH
 
 echo "4. Running Pipeline (Checking CLI invocation)..."
-# We expect this might fail analysis if the key is invalid, 
+# We expect this might fail analysis if the key is invalid,
 # but we want to see if the command starts and handles the error gracefully or if we can mock it.
 # For a smoke test, even a "0 posts analyzed" is a pass if the command itself works.
 python -m pain_radar run --subreddit test --limit 1 --no-progress --db $PAIN_RADAR_DB_PATH || echo "Pipeline finished (errors expected due to mock key)"
 
 echo "5. Testing Web Server..."
-python -m pain_radar web & 
+python -m pain_radar web &
 WEB_PID=$!
 sleep 3
 curl -s http://localhost:8000/ > /dev/null && echo "✓ Web server responded"

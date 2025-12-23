@@ -1,4 +1,5 @@
 import pytest
+
 from pain_radar.analyze import LLMAnalysisError, analyze_post
 from pain_radar.models import ExtractionState, ExtractionType, FullAnalysis, PainSignal
 

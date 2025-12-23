@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from pain_radar.extract_async import extract_idea
 from pain_radar.models import CompetitorNote, DistributionWedge, ExtractionState, PainSignal, SignalScore
 from pain_radar.reddit_async import RedditPost

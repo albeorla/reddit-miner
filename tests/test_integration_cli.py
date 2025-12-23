@@ -2,10 +2,11 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from typer.testing import CliRunner
+
 from pain_radar.cli import app
 from pain_radar.reddit_async import RedditPost
 from pain_radar.store import AsyncStore
-from typer.testing import CliRunner
 
 runner = CliRunner()
 

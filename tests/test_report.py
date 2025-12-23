@@ -3,6 +3,7 @@ import os
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+
 from pain_radar.report import generate_json_report, generate_report
 
 

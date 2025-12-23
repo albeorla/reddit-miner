@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
+
 from pain_radar.web_app import app
 
 client = TestClient(app)

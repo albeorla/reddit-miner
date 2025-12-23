@@ -21,11 +21,11 @@ CREATE TABLE IF NOT EXISTS signals (
     post_id TEXT NOT NULL,
     run_id INTEGER,
     cluster_id TEXT,
-    
+
     -- Extraction state
     extraction_state TEXT NOT NULL DEFAULT 'extracted',  -- extracted, not_extractable, disqualified
     not_extractable_reason TEXT,
-    
+
     -- Extraction fields (renamed from idea_summary for clarity)
     signal_summary TEXT NOT NULL,
     target_user TEXT,
@@ -35,10 +35,10 @@ CREATE TABLE IF NOT EXISTS signals (
     evidence_strength INTEGER DEFAULT 0,
     evidence_strength_reason TEXT,
     risk_flags TEXT,  -- JSON array
-    
+
     -- Legacy field for backward compatibility
     evidence_signals TEXT,  -- JSON array (deprecated, use evidence)
-    
+
     -- Score fields
     disqualified INTEGER DEFAULT 0,
     disqualify_reasons TEXT,  -- JSON array
@@ -49,23 +49,23 @@ CREATE TABLE IF NOT EXISTS signals (
     moat INTEGER,
     total_score INTEGER,
     confidence REAL,
-    
+
     -- Enhanced distribution analysis
     distribution_wedge TEXT,  -- ecosystem, partner_channel, seo, influencer_affiliate, community, product_led
     distribution_wedge_detail TEXT,
-    
+
     -- Enhanced competition analysis
     competition_landscape TEXT,  -- JSON array of CompetitorNote objects
-    
+
     -- Reasoning
     why TEXT,  -- JSON array
     next_validation_steps TEXT,  -- JSON array
-    
+
     -- Metadata
     created_at TEXT NOT NULL,
     raw_extraction TEXT,  -- Full JSON
     raw_score TEXT,  -- Full JSON
-    
+
     FOREIGN KEY (post_id) REFERENCES posts(id),
     FOREIGN KEY (run_id) REFERENCES runs(id)
 );

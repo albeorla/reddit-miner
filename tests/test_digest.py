@@ -1,4 +1,5 @@
 import pytest
+
 from pain_radar.digest import generate_comment_reply, generate_digest_title, generate_weekly_digest
 from pain_radar.models import Cluster
 
