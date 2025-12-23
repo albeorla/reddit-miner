@@ -9,7 +9,7 @@ This plan outlines the refactoring of the Reddit pain point extraction pipeline 
 
 ## Phase 2: Research Tools Implementation
 - [x] Task: Implement `fetch_more_comments` tool in `src/pain_radar/reddit_async.py` 6b2191b
-- [ ] Task: Implement `search_related_posts` tool in `src/pain_radar/reddit_async.py`
+- [x] Task: Implement `search_related_posts` tool in `src/pain_radar/reddit_async.py` 5021e3a
 - [ ] Task: Create Tool abstraction for the Agent in `src/pain_radar/agent/tools.py`
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Research Tools Implementation' (Protocol in workflow.md)
 
