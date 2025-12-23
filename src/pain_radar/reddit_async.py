@@ -243,6 +243,57 @@ async def fetch_more_comments(
     return await _scrape_comments(client, post, limit, start_index)
 
 
+@http_retry
+async def search_related_posts(
+    client: httpx.AsyncClient,
+    subreddit: str,
+    query: str,
+    limit: int = 5,
+) -> list[RedditPost]:
+    """Search for related posts in a subreddit.
+
+    Args:
+        client: HTTP client
+        subreddit: Subreddit to search in
+        query: Search query
+        limit: Max results
+
+    Returns:
+        List of RedditPost objects
+    """
+    import urllib.parse
+
+    safe_query = urllib.parse.quote(query)
+    url = f"{REDDIT_BASE}/r/{subreddit}/search.rss?q={safe_query}&restrict_sr=on&sort=relevance"
+
+    logger.debug("searching_reddit", url=url, query=query)
+
+    response = await client.get(url)
+
+    # Handle special cases
+    if response.status_code == 403:
+        logger.warning("search_forbidden", subreddit=subreddit)
+        return []
+    if response.status_code == 404:
+        logger.warning("subreddit_not_found", subreddit=subreddit)
+        return []
+
+    # Check for retryable errors
+    check_response_for_retry(response)
+
+    # Parse RSS feed
+    feed = feedparser.parse(response.text)
+    posts = []
+
+    for entry in feed.entries[:limit]:
+        post = _parse_rss_entry(entry, subreddit)
+        if post:
+            posts.append(post)
+
+    logger.info("search_complete", subreddit=subreddit, posts=len(posts))
+    return posts
+
+
 async def fetch_posts(
     client: httpx.AsyncClient,
     subreddit: str,
