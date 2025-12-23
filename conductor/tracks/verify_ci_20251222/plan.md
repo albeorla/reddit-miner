@@ -2,7 +2,7 @@
 
 ## Phase 1: Branch and PR Setup
 - [x] Task: Create a new feature branch and push a trivial change. <!-- id: p1t1 --> ff754ce
-- [ ] Task: Use `gh pr create` to open a Pull Request and trigger the CI workflow. <!-- id: p1t2 -->
+- [x] Task: Use `gh pr create` to open a Pull Request and trigger the CI workflow. <!-- id: p1t2 --> 29aac73
 - [ ] Task: Conductor - User Manual Verification 'Branch and PR Setup' (Protocol in workflow.md)
 
 ## Phase 2: Workflow Monitoring and Verification
