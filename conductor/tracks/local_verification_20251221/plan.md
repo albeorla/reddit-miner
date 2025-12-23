@@ -25,7 +25,7 @@
         3. Start the FastAPI server in a background process.
         4. Use `curl` or a python script to check key endpoints.
         5. Stop the server and clean up.
-- [ ] Task: Conductor - User Manual Verification 'Scripted Verification Suite' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Scripted Verification Suite' (Protocol in workflow.md)
 
 ## Phase 5: Coverage Finalization
 - [ ] Task: Run the full test suite and verify >80% coverage.
