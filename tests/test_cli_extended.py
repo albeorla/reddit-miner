@@ -164,3 +164,53 @@ def test_ideas_export(mock_settings, tmp_path):
         assert result.exit_code == 0
         assert "Exported 1 signals" in result.stdout
         assert export_file.exists()
+
+def test_alerts_matches(mock_settings):
+    """Test alerts-matches command."""
+    with patch("pain_radar.cli.alerts.AsyncStore") as mock_store_cls:
+        mock_store = mock_store_cls.return_value
+        mock_store.connect = AsyncMock()
+        mock_store.close = AsyncMock()
+        mock_store.get_unnotified_matches = AsyncMock(return_value=[{
+            "watchlist_name": "W1",
+            "keyword_matched": "k1",
+            "subreddit": "s1",
+            "pain_point": "pain",
+            "url": "url"
+        }])
+        
+        result = runner.invoke(app, ["alerts-matches"])
+        assert result.exit_code == 0
+        assert "Alert Matches" in result.stdout
+
+def test_reply_template():
+    """Test reply-template command."""
+    result = runner.invoke(app, ["reply-template", "Pattern", "-a", "A, B"])
+    assert result.exit_code == 0
+    assert "Comment Reply Template" in result.stdout
+    assert "Pattern" in result.stdout
+
+def test_digest_command(mock_settings):
+    """Test digest command."""
+    with patch("pain_radar.cli.cluster.AsyncStore") as mock_store_cls:
+        mock_store = mock_store_cls.return_value
+        mock_store.connect = AsyncMock()
+        mock_store.close = AsyncMock()
+        mock_store.get_unclustered_pain_points = AsyncMock(return_value=[{"id": 1, "summary": "test"}])
+        
+        with patch("pain_radar.cli.cluster.Clusterer") as mock_clusterer_cls:
+            mock_clusterer = mock_clusterer_cls.return_value
+            cluster = MagicMock()
+            cluster.title = "Cluster Title"
+            cluster.signal_ids = [1]
+            cluster.summary = "Cluster Summary"
+            cluster.target_audience = "Audience"
+            cluster.why_it_matters = "Why"
+            mock_clusterer.cluster_items = AsyncMock(return_value=[cluster])
+            
+            with patch("pain_radar.cli.cluster.generate_weekly_digest", return_value="Digest Content"):
+                with patch("pain_radar.cli.cluster.generate_digest_title", return_value="Digest Title"):
+                    result = runner.invoke(app, ["digest", "test_sub"])
+                    assert result.exit_code == 0
+                    assert "Digest Content" in result.stdout
+

@@ -230,3 +230,158 @@ async def test_watchlist_crud():
     
     await store.close()
 
+@pytest.mark.asyncio
+async def test_store_watchlist_check_integration(sample_post):
+    """Test full integration of watchlist checking against signals."""
+    db_path = ":memory:"
+    store = AsyncStore(db_path)
+    await store.init_db()
+    
+    # 1. Setup Watchlist
+    await store.create_watchlist("Billing", ["stripe", "invoice"], subreddits=["SaaS"])
+    
+    # 2. Setup Signal that matches
+    from pain_radar.models import PainSignal, ExtractionState
+    ext = PainSignal(
+        extraction_state=ExtractionState.EXTRACTED,
+        signal_summary="Issues with stripe billing",
+        pain_point="Stripe is hard",
+        evidence=[]
+    )
+    
+    # Needs post in DB for Join
+    await store.upsert_posts([sample_post])
+    # Ensure post subreddit matches watchlist filter
+    async with store.connection() as conn:
+        await conn.execute("UPDATE posts SET subreddit = 'SaaS' WHERE id = ?", (sample_post.id,))
+        await conn.commit()
+        
+    await store.save_signal(sample_post, ext)
+    
+    # 3. Check watchlists
+    matches = await store.check_watchlists(since_hours=1)
+    
+    assert len(matches) == 1
+    assert matches[0]["keyword_matched"] == "stripe"
+    assert matches[0]["watchlist_name"] == "Billing"
+    
+    await store.close()
+
+@pytest.mark.asyncio
+async def test_store_clustering_integration(sample_post):
+    """Test unclustered retrieval and saving clusters."""
+    db_path = ":memory:"
+    store = AsyncStore(db_path)
+    await store.init_db()
+    
+    from pain_radar.models import PainSignal, ExtractionState, Cluster
+    ext = PainSignal(
+        extraction_state=ExtractionState.EXTRACTED,
+        signal_summary="Test Summary",
+        pain_point="Test Pain",
+        evidence=[]
+    )
+    await store.upsert_posts([sample_post])
+    signal_id = await store.save_signal(sample_post, ext)
+    
+    # 1. Get unclustered
+    items = await store.get_unclustered_pain_points()
+    assert len(items) == 1
+    assert items[0].id == signal_id
+    
+    # 2. Save cluster
+    cluster = Cluster(
+        title="Test Cluster",
+        summary="Summary",
+        target_audience="Users",
+        why_it_matters="Why",
+        signal_ids=[signal_id],
+        quotes=["quote"],
+        urls=["url"]
+    )
+    await store.save_clusters([cluster], "2023-01-01")
+    
+    # 3. Verify signal is now clustered
+    items_after = await store.get_unclustered_pain_points()
+    assert len(items_after) == 0
+    
+    await store.close()
+
+@pytest.mark.asyncio
+async def test_store_watchlist_check_integration(sample_post):
+    """Test full integration of watchlist checking against signals."""
+    db_path = ":memory:"
+    store = AsyncStore(db_path)
+    await store.init_db()
+    
+    # 1. Setup Watchlist
+    await store.create_watchlist("Billing", ["stripe", "invoice"], subreddits=["SaaS"])
+    
+    # 2. Setup Signal that matches
+    from pain_radar.models import PainSignal, ExtractionState
+    ext = PainSignal(
+        extraction_state=ExtractionState.EXTRACTED,
+        signal_summary="Issues with stripe billing",
+        pain_point="Stripe is hard",
+        evidence=[]
+    )
+    
+    # Needs post in DB for Join
+    await store.upsert_posts([sample_post])
+    # Ensure post subreddit matches watchlist filter
+    async with store.connection() as conn:
+        await conn.execute("UPDATE posts SET subreddit = 'SaaS' WHERE id = ?", (sample_post.id,))
+        await conn.commit()
+        
+    await store.save_signal(sample_post, ext)
+    
+    # 3. Check watchlists
+    matches = await store.check_watchlists(since_hours=1)
+    
+    assert len(matches) == 1
+    assert matches[0]["keyword_matched"] == "stripe"
+    assert matches[0]["watchlist_name"] == "Billing"
+    
+    await store.close()
+
+@pytest.mark.asyncio
+async def test_store_clustering_integration(sample_post):
+    """Test unclustered retrieval and saving clusters."""
+    db_path = ":memory:"
+    store = AsyncStore(db_path)
+    await store.init_db()
+    
+    from pain_radar.models import PainSignal, ExtractionState, Cluster
+    ext = PainSignal(
+        extraction_state=ExtractionState.EXTRACTED,
+        signal_summary="Test Summary",
+        pain_point="Test Pain",
+        evidence=[]
+    )
+    await store.upsert_posts([sample_post])
+    signal_id = await store.save_signal(sample_post, ext)
+    
+    # 1. Get unclustered
+    items = await store.get_unclustered_pain_points()
+    assert len(items) == 1
+    assert items[0].id == signal_id
+    
+    # 2. Save cluster
+    cluster = Cluster(
+        title="Test Cluster",
+        summary="Summary",
+        target_audience="Users",
+        why_it_matters="Why",
+        signal_ids=[signal_id],
+        quotes=["quote"],
+        urls=["url"]
+    )
+    await store.save_clusters([cluster], "2023-01-01")
+    
+    # 3. Verify signal is now clustered
+    items_after = await store.get_unclustered_pain_points()
+    assert len(items_after) == 0
+    
+    await store.close()
+
+

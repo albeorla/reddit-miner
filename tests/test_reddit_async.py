@@ -1,5 +1,7 @@
 import pytest
-from pain_radar.reddit_async import _extract_post_id, _clean_html, _parse_rss_entry, RedditPost
+import httpx
+import respx
+from pain_radar.reddit_async import _extract_post_id, _clean_html, _parse_rss_entry, RedditPost, fetch_all_subreddits
 
 def test_extract_post_id():
     """Test extracting post ID from various Reddit URLs."""
@@ -30,3 +32,36 @@ def test_parse_rss_entry():
     assert post.title == "Test Title"
     assert post.body == "Summary content"
     assert post.subreddit == "test"
+
+@pytest.mark.asyncio
+async def test_fetch_all_subreddits():
+    """Test the top-level fetch_all_subreddits function with mocked HTTP."""
+    with respx.mock(base_url="https://www.reddit.com") as respx_mock:
+        # Mock RSS feed
+        rss_content = """<?xml version="1.0" encoding="UTF-8"?>
+        <feed xmlns="http://www.w3.org/2005/Atom">
+            <entry>
+                <id>t3_post1</id>
+                <link href="https://www.reddit.com/r/test/comments/post1/title/"/>
+                <title>Post Title</title>
+                <content type="html">&lt;div&gt;Body&lt;/div&gt;</content>
+            </entry>
+        </feed>"""
+        respx_mock.get("/r/test/new.rss").mock(return_value=httpx.Response(200, text=rss_content))
+        
+        # Mock JSON for comments
+        json_content = [{}, {"data": {"children": [{"kind": "t1", "data": {"body": "Comment 1"}}]}}]
+        respx_mock.get("/r/test/comments/post1/title/.json").mock(return_value=httpx.Response(200, json=json_content))
+        
+        posts = await fetch_all_subreddits(
+            subreddits=["test"],
+            listing="new",
+            limit=1,
+            top_comments=1,
+            max_concurrency=1,
+            user_agent="test-agent"
+        )
+        
+        assert len(posts) == 1
+        assert posts[0].id == "post1"
+        assert posts[0].top_comments == ["Comment 1"]

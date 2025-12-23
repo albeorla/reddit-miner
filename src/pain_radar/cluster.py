@@ -20,7 +20,7 @@ class Clusterer:
         else:
             self.llm = ChatOpenAI(
                 model=model_name,
-                api_key=settings.openai_api_key.get_secret_value(),
+                api_key=settings.openai_api_key,
                 temperature=0.0,
             )
 
