@@ -6,7 +6,7 @@
 - [x] Task: Verify pre-commit hooks run successfully on all files. <!-- id: i9j0k1l --> 3ea9f01
 - [ ] Task: Conductor - User Manual Verification 'Local Pre-commit Configuration' (Protocol in workflow.md)
 
-## Phase 2: GitHub Actions Workflow Implementation
+## Phase 2: GitHub Actions Workflow Implementation [checkpoint: 01477ca]
 - [x] Task: Create `.github/workflows/ci.yml` with linting and formatting jobs. <!-- id: m2n3o4p --> a25d93e
 - [x] Task: Add a testing job to `ci.yml` that runs `pytest` with coverage. <!-- id: q5r6s7t --> e1a864b
 - [x] Task: Configure Codecov (or similar) integration for coverage reporting. <!-- id: u8v9w0x --> e1a864b
