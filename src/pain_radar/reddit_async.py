@@ -157,13 +157,15 @@ async def _scrape_comments(
     client: httpx.AsyncClient,
     post: RedditPost,
     limit: int,
+    start_index: int = 0,
 ) -> list[str]:
-    """Scrape top comments from a Reddit post page.
+    """Scrape comments from a Reddit post page.
 
     Args:
         client: HTTP client
         post: RedditPost to fetch comments for
-        limit: Maximum number of comments
+        limit: Maximum number of comments to return
+        start_index: Index to start collecting comments from
 
     Returns:
         List of comment text strings
@@ -207,7 +209,8 @@ async def _scrape_comments(
     comments_data = data[1].get("data", {}).get("children", [])
     comments = []
 
-    for child in comments_data[:limit]:
+    # Skip start_index comments and take up to limit
+    for child in comments_data[start_index : start_index + limit]:
         if child.get("kind") != "t1":  # t1 = comment
             continue
         body = child.get("data", {}).get("body", "")
@@ -218,6 +221,26 @@ async def _scrape_comments(
                 comments.append(body)
 
     return comments
+
+
+async def fetch_more_comments(
+    client: httpx.AsyncClient,
+    post: RedditPost,
+    start_index: int,
+    limit: int,
+) -> list[str]:
+    """Public wrapper to fetch more comments for a post.
+
+    Args:
+        client: HTTP client
+        post: RedditPost
+        start_index: Where to start
+        limit: How many more
+
+    Returns:
+        List of additional comments
+    """
+    return await _scrape_comments(client, post, limit, start_index)
 
 
 async def fetch_posts(
