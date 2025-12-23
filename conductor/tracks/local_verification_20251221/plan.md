@@ -6,11 +6,11 @@
 - [x] Task: Write tests for CRUD operations on Source and SourceSet models. <!-- id: 6b50c16 -->
 - [x] Task: Conductor - User Manual Verification 'Storage Layer Testing' (Protocol in workflow.md)
 
-## Phase 2: Pipeline and CLI Testing (`src/pain_radar/pipeline.py` & `src/pain_radar/cli/`)
+## Phase 2: Pipeline and CLI Testing (`src/pain_radar/pipeline.py` & `src/pain_radar/cli/`) [checkpoint: c8ecb0c]
 - [x] Task: Write unit tests for `pipeline.py` (mocking reddit and LLM). <!-- id: e6fcfde -->
 - [x] Task: Write tests for CLI command registration and arguments (using `CliRunner`). <!-- id: 4e0dcce -->
 - [x] Task: Write integration tests for `fetch` and `run` commands (mocking network). <!-- id: a3f4758 -->
-- [ ] Task: Conductor - User Manual Verification 'Pipeline and CLI Testing' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Pipeline and CLI Testing' (Protocol in workflow.md)
 
 ## Phase 3: Web and API Testing (`src/pain_radar/web_app.py` & `src/pain_radar/api/`)
 - [ ] Task: Write tests for web routes (Dashboard, Signal Detail) using `TestClient`.
