@@ -21,8 +21,8 @@
 - [x] Task: Create a repeatable verification script (`scripts/verify_local.sh`). <!-- id: 6da2628 -->
 - [x] Task: Conductor - User Manual Verification 'Scripted Verification Suite' (Protocol in workflow.md)
 
-## Phase 5: Coverage Finalization
+## Phase 5: Coverage Finalization [checkpoint: 6aa3591]
 - [x] Task: Run the full test suite and verify >80% coverage. <!-- id: 13bc8f4 -->
     - Execute `pytest --cov=src/pain_radar`.
     - Identify and address any remaining coverage gaps in core logic.
-- [ ] Task: Conductor - User Manual Verification 'Coverage Finalization' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Coverage Finalization' (Protocol in workflow.md) <!-- id: 6aa3591 -->
